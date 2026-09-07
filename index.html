@@ -145,7 +145,19 @@ function previewReport(){let n=document.getElementById("pname").value,s=document
 async function shareReport(){let txt="DIRE-F — Digital Report Frontliner\\nLaporan observasi";if(navigator.share){try{await navigator.share({title:"DIRE-F Report",text:txt})}catch(e){}}else{navigator.clipboard?.writeText(txt);toast("Ringkasan disalin")}}
 function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
 </script>
-</body></html>
+    
+    function startApp() {
+        const splash = document.getElementById("splash");
+
+        splash.style.transition = "opacity 0.4s ease";
+        splash.style.opacity = "0";
+
+        setTimeout(() => {
+            splash.style.display = "none";
+        }, 400);
+    }
+</script>
+
 <div class="splash" id="splash">
     <img
         src="./assets/dire-f-splash.png"
@@ -153,7 +165,6 @@ function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&l
         class="splash-image"
     >
 
-    <!-- Tombol transparan di atas tulisan MULAI -->
     <button
         id="start-app"
         class="splash-start"
@@ -161,3 +172,7 @@ function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&l
         aria-label="Mulai aplikasi">
     </button>
 </div>
+
+</body>
+</html>
+
