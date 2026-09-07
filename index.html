@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0756d8">
+<title>DIRE-F — Digital Report Frontliner</title>
+<link rel="icon" href="assets/dire-f-icon.png">
+<style>
+:root{--blue:#0756d8;--blue2:#2f8df7;--light:#eaf4ff;--yellow:#ffd21c;--green:#16a56b;--ink:#10233f;--muted:#65748b;--danger:#dc3545}
+*{box-sizing:border-box} body{margin:0;font-family:Inter,Arial,sans-serif;background:#fff;color:var(--ink)}
+button,input,select,textarea{font:inherit} button{cursor:pointer}
+.splash{position:fixed;inset:0;z-index:100;background:#063b9e;display:flex;align-items:center;justify-content:center}
+.splash img{width:100%;height:100%;object-fit:cover}.start{position:absolute;bottom:12%;width:min(72%,360px);padding:15px 20px;border:0;border-radius:40px;background:#0865e8;color:#fff;font-weight:800;font-size:21px;box-shadow:0 0 22px #49c8ff}
+.app{display:none;min-height:100vh;background:#fff}.top{position:sticky;top:0;z-index:10;background:linear-gradient(135deg,#0756d8,#2b8ef4);color:#fff;padding:14px 16px 18px;border-radius:0 0 22px 22px;box-shadow:0 3px 15px #b7c8df}.toprow{display:flex;align-items:center;justify-content:space-between}.brand{font-weight:900;font-size:23px;font-style:italic}.sub{font-size:10px;opacity:.9}.content{padding:18px 15px 90px;max-width:720px;margin:auto}
+h1{font-size:24px;margin:5px 0}.lead{color:var(--muted);margin-top:4px}.wave{height:5px;background:linear-gradient(90deg,var(--yellow),#35d08d,var(--blue));border-radius:10px;margin:14px 0 18px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.menu{background:var(--light);border:1px solid #cfe4ff;border-radius:18px;padding:19px 10px;text-align:center;min-height:115px;color:var(--blue);font-weight:800;box-shadow:0 5px 13px #dfeafa}.menu .ico{font-size:30px;margin-bottom:8px}.menu small{display:block;color:var(--muted);font-weight:500;margin-top:5px}
+.card{background:#fff;border:1px solid #dbe8f6;border-radius:16px;padding:15px;margin-bottom:13px;box-shadow:0 4px 13px #e8eef6}.section{background:#eef7ff;border-left:5px solid var(--blue);padding:12px;border-radius:12px;margin:15px 0 10px}.section h3{margin:0;color:var(--blue);font-size:16px}
+label{display:block;font-weight:700;font-size:13px;margin:10px 0 6px}input,select,textarea{width:100%;border:1px solid #cbd8e8;border-radius:10px;padding:11px;background:#fff;color:var(--ink)}textarea{min-height:80px;resize:vertical}
+.btnrow{display:flex;gap:9px;flex-wrap:wrap;margin-top:13px}.btn{border:0;border-radius:10px;padding:11px 16px;font-weight:800}.primary{background:var(--blue);color:#fff}.secondary{background:#e8f2ff;color:var(--blue)}.success{background:var(--green);color:#fff}.warning{background:var(--yellow);color:#17243a}.danger{background:var(--danger);color:#fff}
+.status{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}.status label{margin:0}.status input{display:none}.status span{display:block;text-align:center;padding:9px 5px;border:1px solid #c9d8e8;border-radius:9px;background:#fff;font-size:12px}.status input:checked+span{background:#0756d8;color:#fff;border-color:#0756d8}
+.note{font-size:12px;color:var(--muted);margin-top:6px}.tablewrap{overflow:auto}.table{width:100%;border-collapse:collapse;font-size:12px}.table th,.table td{border-bottom:1px solid #e5edf6;padding:9px;text-align:left;white-space:nowrap}.table th{background:#eef6ff;color:var(--blue)}
+.kpi{display:grid;grid-template-columns:1fr 1fr;gap:10px}.kpi .box{padding:14px;border-radius:14px;background:#eaf8f2;text-align:center}.num{font-size:25px;font-weight:900;color:var(--green)}.pill{display:inline-block;padding:7px 11px;border-radius:20px;background:#eaf8f2;color:#138456;font-weight:800;font-size:12px}
+.bottom{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #dce7f3;padding:9px;display:flex;justify-content:center;z-index:9}.back{color:var(--blue);font-weight:800;background:none;border:0}
+.toast{position:fixed;left:50%;bottom:75px;transform:translateX(-50%);background:#10233f;color:#fff;padding:11px 16px;border-radius:20px;display:none;z-index:200}
+@media(min-width:700px){.grid{grid-template-columns:repeat(3,1fr)}}
+</style>
+</head>
+<body>
+<div class="splash" id="splash">
+  <img src="assets/dire-f-splash.png" alt="DIRE-F Splash">
+  <button class="start" onclick="startApp()">MULAI ➜</button>
+</div>
+
+<div class="app" id="app">
+<header class="top"><div class="toprow"><div><div class="brand">DIRE-F</div><div class="sub">Digital Report Frontliner</div></div><div>☰</div></div></header>
+<main class="content" id="screen"></main>
+<div class="bottom"><button class="back" onclick="home()">⌂ HOME</button></div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const master = [
+ {name:"Greeting",items:["Senyum sapa salam","Memperkenalkan diri dan sebut nama","Jika sudah kenal sebut nama nasabah","Menanyakan nama nasabah","Menanyakan kebutuhan nasabah"]},
+ {name:"Socialization",items:["Menginformasikan survey layanan oleh Hallo BCA","Menginformasikan survey layanan oleh Gallup"]},
+ {name:"Education",items:["Melakukan edukasi VOC BSQ kepada nasabah perorangan dan PT","Melakukan edukasi VOC CE kepada nasabah K1","Melakukan edukasi penggunaan aplikasi dan mesin digital"]},
+ {name:"Telling",items:["Melakukan penawaran produk-produk","Menginformasikan event yang akan diselenggarakan"]},
+ {name:"Satisfaction",items:["Memproses transaksi dengan cepat","Melayani dengan fokus","Memproses transaksi dengan teliti","Memberikan penjelasan yang lengkap","Mengatasi solusi dengan tuntas"]},
+ {name:"Appreciation",items:["Menanyakan kebutuhan lain sebelum mengakhiri layanan","Menyampaikan ucapan terima kasih","Menyampaikan kata-kata magic word"]},
+ {name:"Checking",items:["Melakukan cek nasabah K1","Menggali kebutuhan nasabah"]},
+ {name:"Report & FollowUp",items:["Menginput penawaran solusi yang ditawarkan","Menindaklanjuti setiap penawaran solusi yang dilakukan"]}
+];
+let observations = JSON.parse(localStorage.getItem("diref_obs")||"[]");
+let frontliners = JSON.parse(localStorage.getItem("diref_frontliners")||"[]");
+let editId=null;
+
+function saveAll(){localStorage.setItem("diref_obs",JSON.stringify(observations));localStorage.setItem("diref_frontliners",JSON.stringify(frontliners))}
+function toast(t){let x=document.getElementById("toast");x.textContent=t;x.style.display="block";setTimeout(()=>x.style.display="none",1800)}
+function startApp(){document.getElementById("splash").style.display="none";document.getElementById("app").style.display="block";home()}
+function home(){
+ editId=null;
+ document.getElementById("screen").innerHTML=`
+ <h1>Digital Report Frontliner</h1><p class="lead">Selamat datang di DIRE-F. Kelola observasi, score, dan laporan Frontliner.</p><div class="wave"></div>
+ <div class="grid">
+  ${menu("👥","Register","Data Frontliner","register")}
+  ${menu("📋","Observasi","Checklist penilaian","observasi")}
+  ${menu("📊","Daily Report","Rekap observasi harian","daily")}
+  ${menu("📚","Master Penilaian","Item penilaian","master")}
+  ${menu("⭐","Score Observasi","Score & histori","score")}
+  ${menu("🖨️","Cetak Laporan","Preview & share","print")}
+ </div>`;
+}
+function menu(i,t,s,k){return `<button class="menu" onclick="${k}()"><div class="ico">${i}</div>${t}<small>${s}</small></button>`}
+function register(){
+ document.getElementById("screen").innerHTML=`<h1>Register Frontliner</h1><p class="lead">Kelola nama dan unit kerja.</p>
+ <div class="card"><label>Nama Frontliner</label><input id="rname" placeholder="Masukkan nama">
+ <label>Unit Kerja</label><input id="runit" placeholder="Masukkan unit kerja">
+ <div class="btnrow"><button class="btn primary" onclick="saveReg()">💾 Save</button><button class="btn danger" onclick="clearReg()">🗑 Delete</button></div></div>
+ <div class="card"><h3>Daftar Frontliner</h3><div class="tablewrap"><table class="table"><tr><th>Nama</th><th>Unit</th><th>Aksi</th></tr>${frontliners.map((f,i)=>`<tr><td>${esc(f.name)}</td><td>${esc(f.unit)}</td><td><button class="btn secondary" onclick="editReg(${i})">Edit</button> <button class="btn danger" onclick="delReg(${i})">Delete</button></td></tr>`).join("")||"<tr><td colspan=3>Belum ada data.</td></tr>"}</table></div></div>`;
+}
+function saveReg(){let n=document.getElementById("rname").value.trim(),u=document.getElementById("runit").value.trim();if(!n||!u)return toast("Nama dan unit kerja wajib diisi");frontliners.push({name:n,unit:u});saveAll();toast("Data tersimpan");register()}
+function clearReg(){document.getElementById("rname").value="";document.getElementById("runit").value="";toast("Form dikosongkan")}
+function editReg(i){let f=frontliners[i],n=prompt("Nama Frontliner",f.name),u=prompt("Unit Kerja",f.unit);if(n&&u){frontliners[i]={name:n,unit:u};saveAll();register()}}
+function delReg(i){if(confirm("Hapus data Frontliner?")){frontliners.splice(i,1);saveAll();register()}}
+function observasi(id=null){
+ editId=id;
+ let o=id!==null?observations.find(x=>x.id===id):null;
+ document.getElementById("screen").innerHTML=`<h1>Observasi Frontliner</h1><p class="lead">Isi data observasi dan checklist penilaian.</p>
+ <div class="card"><label>Tanggal Observasi</label><input type="date" id="odate" value="${o?.date||new Date().toISOString().slice(0,10)}">
+ <label>Nama Frontliner</label><select id="oname"><option value="">Pilih nama</option>${frontliners.map(f=>`<option ${o?.name===f.name?"selected":""}>${esc(f.name)}</option>`).join("")}</select>
+ <label>Target Customer (1–10)</label><input type="number" id="target" min="1" max="10" value="${o?.target||1}"></div>
+ <div id="assess">${master.map((m,mi)=>sectionHTML(m,mi,o)).join("")}</div>
+ <div class="btnrow"><button class="btn primary" onclick="saveObs()">💾 SAVE</button>${o?`<button class="btn warning" onclick="observasi(${o.id})">✏️ EDIT</button><button class="btn danger" onclick="deleteObs(${o.id})">🗑 DELETE</button>`:""}<button class="btn secondary" onclick="home()">Batal</button></div>`;
+}
+function sectionHTML(m,mi,o){
+ let saved=o?.sections?.[mi], val=saved?.status||"";
+ return `<div class="card"><div class="section"><h3>${mi+1}. ${m.name}</h3></div>
+ <div class="status">${["Complete","In Complete","No"].map(s=>`<label><input type="radio" name="st${mi}" value="${s}" ${val===s?"checked":""}><span>${s}<br><b>(${s==="Complete"?100:50})</b></span></label>`).join("")}</div>
+ <label>Catatan Observasi</label><textarea id="note${mi}" placeholder="Tulis catatan observasi...">${esc(saved?.note||"")}</textarea>
+ <div class="note">${m.items.length} item master penilaian. Detail item dapat dikembangkan pada tahap berikutnya.</div></div>`
+}
+function saveObs(){
+ let date=document.getElementById("odate").value,name=document.getElementById("oname").value,target=Math.min(10,Math.max(1,Number(document.getElementById("target").value||1)));
+ if(!name)return toast("Pilih nama Frontliner");
+ let sections=master.map((m,i)=>({status:document.querySelector(`input[name=st${i}]:checked`)?.value||"",note:document.getElementById("note"+i).value}));
+ let scored=sections.filter(x=>x.status); if(scored.length<8)return toast("Lengkapi 8 penilaian terlebih dahulu");
+ let total=scored.reduce((a,x)=>a+(x.status==="Complete"?100:50),0),score=total/8;
+ let obj={id:editId||Date.now(),date,name,target,sections,score};
+ if(editId){let i=observations.findIndex(x=>x.id===editId);observations[i]=obj}else observations.push(obj);
+ saveAll();toast("Observasi tersimpan");daily()
+}
+function deleteObs(id){if(confirm("Hapus hasil observasi ini?")){observations=observations.filter(x=>x.id!==id);saveAll();toast("Observasi dihapus");daily()}}
+function daily(){
+ document.getElementById("screen").innerHTML=`<h1>Daily Report</h1><p class="lead">Rekap hasil observasi harian.</p>
+ <div class="card"><label>Tampilan</label><select id="dfilter" onchange="renderDaily()"><option value="all">Semua Nama</option>${frontliners.map(f=>`<option>${esc(f.name)}</option>`).join("")}</select><label>Tanggal</label><input type="date" id="ddate" value="${new Date().toISOString().slice(0,10)}" onchange="renderDaily()"></div><div id="dailyTable"></div>`;
+ renderDaily()
+}
+function renderDaily(){let d=document.getElementById("ddate")?.value, f=document.getElementById("dfilter")?.value||"all";let rows=observations.filter(o=>(!d||o.date===d)&&(f==="all"||o.name===f));document.getElementById("dailyTable").innerHTML=`<div class="card"><div class="tablewrap"><table class="table"><tr><th>Tanggal</th><th>Nama</th><th>Target</th><th>Score</th><th>Aksi</th></tr>${rows.map(o=>`<tr><td>${o.date}</td><td>${esc(o.name)}</td><td>${o.target}</td><td><b>${o.score.toFixed(1)}</b></td><td><button class="btn secondary" onclick="observasi(${o.id})">Lihat/Edit</button></td></tr>`).join("")||"<tr><td colspan=5>Belum ada observasi.</td></tr>"}</table></div></div>`}
+function masterPage(){
+ document.getElementById("screen").innerHTML=`<h1>Master Penilaian</h1><p class="lead">Acuan item penilaian untuk observasi dan pengembangan AI.</p>${master.map((m,i)=>`<div class="card"><div class="section"><h3>${i+1}. ${m.name}</h3></div><ol>${m.items.map(x=>`<li>${x}</li>`).join("")}</ol></div>`).join("")}<div class="card"><b>Skema score:</b> Complete = 100, In Complete = 50, No = 50.</div>`
+}
+function scorePage(){
+ let names=[...new Set(observations.map(o=>o.name))];
+ document.getElementById("screen").innerHTML=`<h1>Score Observasi</h1><p class="lead">Score, review, improvement, dan histori konsistensi.</p><div class="card"><label>Nama Frontliner</label><select id="sname" onchange="renderScore()"><option value="">Pilih nama</option>${names.map(n=>`<option>${esc(n)}</option>`).join("")}</select></div><div id="scoreResult"></div>`
+}
+function renderScore(){let n=document.getElementById("sname").value,r=document.getElementById("scoreResult");if(!n){r.innerHTML="";return}let rows=observations.filter(o=>o.name===n).sort((a,b)=>a.date.localeCompare(b.date)),avg=rows.length?rows.reduce((a,o)=>a+o.score,0)/rows.length:0,stable=rows.length>=2&&Math.max(...rows.map(o=>o.score))-Math.min(...rows.map(o=>o.score))<=25?"KONSISTEN":"PERLU PERHATIAN";
+let review=avg>=87.5?"Performa menunjukkan hasil yang baik. Pertahankan konsistensi pada seluruh aspek.":"Masih terdapat area yang perlu ditingkatkan agar performa lebih konsisten.";
+let low=[];rows.forEach(o=>o.sections.forEach((s,i)=>{if(s.status!=="Complete")low.push(master[i].name)}));low=[...new Set(low)];
+r.innerHTML=`<div class="card"><div class="kpi"><div class="box"><div>Rata-rata Score</div><div class="num">${avg.toFixed(1)}</div></div><div class="box"><div>Status</div><div class="pill">${stable}</div></div></div></div><div class="card"><h3>Histori Score</h3><div class="tablewrap"><table class="table"><tr><th>Tanggal</th><th>Score</th><th>Target</th></tr>${rows.map(o=>`<tr><td>${o.date}</td><td>${o.score.toFixed(1)}</td><td>${o.target}</td></tr>`).join("")}</table></div></div><div class="card"><h3>Review</h3><p>${review}</p><h3>Masukan / Improvement</h3><p>${low.length?"Perhatikan konsistensi pada: "+low.join(", ")+".":"Tidak ada aspek yang perlu perhatian khusus pada data ini."}</p></div>`}
+function printPage(){
+ document.getElementById("screen").innerHTML=`<h1>Cetak Laporan</h1><p class="lead">Preview laporan dan pilih cetak atau share.</p><div class="card"><label>Nama Frontliner</label><select id="pname"><option value="all">Semua Nama</option>${frontliners.map(f=>`<option>${esc(f.name)}</option>`).join("")}</select><label>Periode mulai</label><input type="date" id="pstart"><label>Periode akhir</label><input type="date" id="pend"><div class="btnrow"><button class="btn primary" onclick="previewReport()">👁 Preview</button><button class="btn success" onclick="window.print()">🖨 Cetak</button><button class="btn warning" onclick="shareReport()">📤 Share / Kirim</button></div></div><div id="preview"></div>`
+}
+function previewReport(){let n=document.getElementById("pname").value,s=document.getElementById("pstart").value,e=document.getElementById("pend").value,rows=observations.filter(o=>(n==="all"||o.name===n)&&(!s||o.date>=s)&&(!e||o.date<=e));document.getElementById("preview").innerHTML=`<div class="card"><h2>Digital Report Frontliner</h2><p><b>Periode:</b> ${s||"-"} s/d ${e||"-"}</p><div class="tablewrap"><table class="table"><tr><th>Tanggal</th><th>Nama</th><th>Score</th></tr>${rows.map(o=>`<tr><td>${o.date}</td><td>${esc(o.name)}</td><td>${o.score.toFixed(1)}</td></tr>`).join("")||"<tr><td colspan=3>Tidak ada data.</td></tr>"}</table></div></div>`}
+async function shareReport(){let txt="DIRE-F — Digital Report Frontliner\\nLaporan observasi";if(navigator.share){try{await navigator.share({title:"DIRE-F Report",text:txt})}catch(e){}}else{navigator.clipboard?.writeText(txt);toast("Ringkasan disalin")}}
+function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+</script>
+</body></html>
