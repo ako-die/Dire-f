@@ -180,23 +180,18 @@ function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&l
 </script>
   <script>  
     function startApp() {
-    const splash = document.getElementById("splash");
+    document.getElementById("splash").style.display = "none";
+
     const app = document.querySelector(".app");
-
-    if (splash) {
-        splash.style.transition = "opacity 0.4s ease";
-        splash.style.opacity = "0";
-        splash.style.pointerEvents = "none";
-
-        setTimeout(function () {
-            splash.style.display = "none";
-        }, 400);
-    }
 
     if (app) {
         app.style.display = "block";
     }
+
+    home();
 }
+
+    
       document.addEventListener("DOMContentLoaded", function () {
     const startButton = document.getElementById("start-app");
 
@@ -206,6 +201,7 @@ function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&l
             e.preventDefault();
             startApp();
         });
+        
     }
 });
 </script>
