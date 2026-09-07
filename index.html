@@ -69,6 +69,8 @@ label{display:block;font-weight:700;font-size:13px;margin:10px 0 6px}input,selec
     <button
         id="start-app"
         class="splash-start"
+        type="button"
+    onclick="startApp(); return false;"
     
         aria-label="Mulai aplikasi">
     </button>
@@ -208,20 +210,7 @@ function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&l
 });
 </script>
 
-<div class="splash" id="splash" onclick="startApp()">
-    <img
-        src="./dire-f-splash.png"
-        alt="DIRE-F"
-        class="splash-image"
-    >
 
-    <button
-    id="start-app"
-    class="splash-start"
-    type="button"
-    onclick="document.getElementById('splash').style.display='none'; document.querySelector('.app').style.display='block';">
-</button>
-</div>
 
 </body>
 </html>
