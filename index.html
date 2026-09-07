@@ -145,7 +145,7 @@ function previewReport(){let n=document.getElementById("pname").value,s=document
 async function shareReport(){let txt="DIRE-F — Digital Report Frontliner\\nLaporan observasi";if(navigator.share){try{await navigator.share({title:"DIRE-F Report",text:txt})}catch(e){}}else{navigator.clipboard?.writeText(txt);toast("Ringkasan disalin")}}
 function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
 </script>
-    
+  <script>  
     function startApp() {
         const splash = document.getElementById("splash");
 
@@ -160,7 +160,7 @@ function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&l
 
 <div class="splash" id="splash">
     <img
-        src="./assets/dire-f-splash.png"
+        src="./dire-f-splash.png"
         alt="DIRE-F"
         class="splash-image"
     >
