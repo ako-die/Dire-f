@@ -114,7 +114,7 @@ ${menu("⭐","Score Observasi","Score & histori","scorePage")}
 ${menu("🖨️","Cetak Laporan","Preview & share","printPage")}
  </div>`;
 }
-function menu(i,t,s,k){return `<button class="menu" onclick="${k}()">
+function menu(i,t,s,k){return `<button class="menu" onclick="${k()}">
 function register(){
  document.getElementById("screen").innerHTML=`<h1>Register Frontliner</h1><p class="lead">Kelola nama dan unit kerja.</p>
  <div class="card"><label>Nama Frontliner</label><input id="rname" placeholder="Masukkan nama">
