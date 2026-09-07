@@ -216,12 +216,11 @@ function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&l
     >
 
     <button
-        id="start-app"
-        class="splash-start"
-        type="button"
-        onclick="startApp(); return false;"
-        
-    </button>
+    id="start-app"
+    class="splash-start"
+    type="button"
+    onclick="document.getElementById('splash').style.display='none'; document.querySelector('.app').style.display='block';">
+</button>
 </div>
 
 </body>
