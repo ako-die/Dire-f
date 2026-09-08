@@ -235,11 +235,57 @@ function observasi(id=null){
   `;
 }
 function sectionHTML(m,mi,o){
- let saved=o?.sections?.[mi], val=saved?.status||"";
- return `<div class="card"><div class="section"><h3>${mi+1}. ${m.name}</h3></div>
- <div class="status">${["Complete","In Complete","No"].map(s=>`<label><input type="radio" name="st${mi}" value="${s}" ${val===s?"checked":""}><span>${s}<br><b>(${s==="Complete"?100:50})</b></span></label>`).join("")}</div>
- <label>Catatan Observasi</label><textarea id="note${mi}" placeholder="Tulis catatan observasi...">${esc(saved?.note||"")}</textarea>
- <div class="note">${m.items.length} item master penilaian. Detail item dapat dikembangkan pada tahap berikutnya.</div></div>`
+  let saved=o?.sections?.[mi];
+
+  return `
+    <div class="card">
+      <div class="section">
+        <h3>${mi+1}. ${m.name}</h3>
+
+        ${m.items.map((item,ii)=>{
+          let val=saved?.items?.[ii]?.status||"";
+
+          return `
+            <div class="obs-item">
+              <strong>${ii+1}. ${item}</strong>
+
+              <div class="status">
+                <label>
+                  <input type="radio"
+                    name="status_${mi}_${ii}"
+                    value="Complete"
+                    ${val==="Complete"?"checked":""}>
+                  Complete<br>(100)
+                </label>
+
+                <label>
+                  <input type="radio"
+                    name="status_${mi}_${ii}"
+                    value="In Complete"
+                    ${val==="In Complete"?"checked":""}>
+                  In Complete<br>(50)
+                </label>
+
+                <label>
+                  <input type="radio"
+                    name="status_${mi}_${ii}"
+                    value="No"
+                    ${val==="No"?"checked":""}>
+                  No<br>(50)
+                </label>
+              </div>
+
+              <label>Catatan Observasi</label>
+              <textarea
+                id="note_${mi}_${ii}"
+                placeholder="Tulis catatan observasi..."
+              >${saved?.items?.[ii]?.note||""}</textarea>
+            </div>
+          `;
+        }).join("")}
+      </div>
+    </div>
+  `;
 }
 function saveObs(){
  let date=document.getElementById("odate").value,name=document.getElementById("oname").value,target=Math.min(10,Math.max(1,Number(document.getElementById("target").value||1)));
