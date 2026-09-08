@@ -344,6 +344,7 @@ function masterPage(){
 function scorePage(){
  let names=[...new Set(observations.map(o=>o.name))];
  document.getElementById("screen").innerHTML=`<h1>Score Observasi</h1><p class="lead">Score, review, improvement, dan histori konsistensi.</p><div class="card"><label>Nama Frontliner</label><select id="sname" onchange="renderScore()"><option value="">Pilih nama</option>${names.map(n=>`<option>${esc(n)}</option>`).join("")}</select></div><div id="scoreResult"></div>`
+renderScore();
 }
 function renderScore(){
   let n=document.getElementById("sname").value;
