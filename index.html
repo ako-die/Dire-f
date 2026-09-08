@@ -415,18 +415,23 @@ function renderScore(){
   function scoreObs(o){
     let all=[];
 
-    o.sections.forEach(s=>{
-      s.items.forEach(x=>{
-        if(x.status) all.push(
-          x.status==="Complete"?100:
-          x.status==="In Complete"?50:0
-        );
+    (o.sections||[]).forEach(s=>{
+      (s.items||[]).forEach(x=>{
+        if(x.status){
+          all.push(
+            x.status==="Complete"
+              ?100
+              :x.status==="In Complete"
+                ?50
+                :0
+          );
+        }
       });
     });
 
     return all.length
-      ? all.reduce((a,b)=>a+b,0)/all.length
-      : 0;
+      ?all.reduce((a,b)=>a+b,0)/all.length
+      :0;
   }
 
   rows.forEach(o=>{
@@ -434,8 +439,8 @@ function renderScore(){
   });
 
   let avg=rows.length
-    ? rows.reduce((a,o)=>a+o.score,0)/rows.length
-    : 0;
+    ?rows.reduce((a,o)=>a+o.score,0)/rows.length
+    :0;
 
   let stable="BELUM ADA DATA";
 
@@ -452,8 +457,8 @@ function renderScore(){
   let low=[];
 
   rows.forEach(o=>{
-    o.sections.forEach(s=>{
-      s.items.forEach(x=>{
+    (o.sections||[]).forEach(s=>{
+      (s.items||[]).forEach(x=>{
         if(x.status==="In Complete" || x.status==="No"){
           low.push({
             category:s.name,
@@ -466,23 +471,23 @@ function renderScore(){
   });
 
   let review=low.length
-    ? low.map(x=>
-        `<li><b>${x.category}</b> — ${x.item}
-        <br><span class="muted">Status: ${x.status}</span></li>`
-      ).join("")
-    : "Tidak ada aspek yang perlu diperhatikan.";
+    ?low.map(x=>
+      `<li><b>${x.category}</b> - ${x.item}
+      <br><span class="muted">Status: ${x.status}</span></li>`
+    ).join("")
+    :"Tidak ada aspek yang perlu diperhatikan.";
 
   let suggestion=low.length
-    ? low.map(x=>
-        `<li>Tingkatkan konsistensi pada <b>${x.item}</b> 
-        dalam kategori <b>${x.category}</b>.</li>`
-      ).join("")
-    : "Pertahankan performa dan konsistensi layanan.";
+    ?low.map(x=>
+      `<li>Tingkatkan konsistensi pada <b>${x.item}</b>
+      dalam kategori <b>${x.category}</b>.</li>`
+    ).join("")
+    :"Pertahankan performa dan konsistensi layanan.";
 
   r.innerHTML=`
     <div class="card">
-
       <div class="kpi">
+
         <div class="box">
           <div>Rata-rata Score</div>
           <div class="num">${avg.toFixed(1)}</div>
@@ -492,44 +497,45 @@ function renderScore(){
           <div>Status</div>
           <div class="pill">${stable}</div>
         </div>
+
       </div>
+    </div>
 
-      <div class="card">
-        <h3>History Score</h3>
+    <div class="card">
+      <h3>History Score</h3>
 
-        <div class="tablewrap">
-          <table class="table">
+      <div class="tablewrap">
+        <table class="table">
+          <tr>
+            <th>Tanggal</th>
+            <th>Score</th>
+            <th>Target</th>
+          </tr>
+
+          ${rows.map(o=>`
             <tr>
-              <th>Tanggal</th>
-              <th>Score</th>
-              <th>Target</th>
+              <td>${o.date}</td>
+              <td>${o.score.toFixed(1)}</td>
+              <td>${o.target}</td>
             </tr>
+          `).join("")}
 
-            ${rows.map(o=>`
-              <tr>
-                <td>${o.date}</td>
-                <td>${o.score.toFixed(1)}</td>
-                <td>${o.target}</td>
-              </tr>
-            `).join("")}
-
-          </table>
-        </div>
+        </table>
       </div>
+    </div>
 
-      <div class="card">
-        <h3>Review</h3>
-        <ol>${review}</ol>
-      </div>
+    <div class="card">
+      <h3>Review</h3>
+      <ol>${review}</ol>
+    </div>
 
-      <div class="card">
-        <h3>Masukan / Improvement</h3>
-        <ul>${suggestion}</ul>
-      </div>
-
+    <div class="card">
+      <h3>Masukan / Improvement</h3>
+      <ul>${suggestion}</ul>
     </div>
   `;
 }
+
 function printPage(){
  document.getElementById("screen").innerHTML=`<h1>Cetak Laporan</h1><p class="lead">Preview laporan dan pilih cetak atau share.</p><div class="card"><label>Nama Frontliner</label><select id="pname"><option value="all">Semua Nama</option>${frontliners.map(f=>`<option>${esc(f.name)}</option>`).join("")}</select><label>Periode mulai</label><input type="date" id="pstart"><label>Periode akhir</label><input type="date" id="pend"><div class="btnrow"><button class="btn primary" onclick="previewReport()">👁 Preview</button><button class="btn success" onclick="window.print()">🖨 Cetak</button><button class="btn warning" onclick="shareReport()">📤 Share / Kirim</button></div></div><div id="preview"></div>`
 }
