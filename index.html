@@ -332,10 +332,47 @@ let score=scored.length?scored.reduce((a,x)=>a+(x.status==="Complete"?100:x.stat
   daily();
 }
 function deleteObs(id){if(confirm("Hapus hasil observasi ini?")){observations=observations.filter(x=>x.id!==id);saveAll();toast("Observasi dihapus");daily()}}
+   function clearObservations(){
+  if(!observations.length){
+    return toast("Belum ada data observasi");
+  }
+
+  if(confirm("Hapus SEMUA data observasi? Data Daily Report dan Score juga akan kosong.")){
+    observations=[];
+    saveAll();
+    toast("Semua data observasi dihapus");
+    daily();
+  }
+} 
 function daily(){
  document.getElementById("screen").innerHTML=`<h1>Daily Report</h1><p class="lead">Rekap hasil observasi harian.</p>
- <div class="card"><label>Tampilan</label><select id="dfilter" onchange="renderDaily()"><option value="all">Semua Nama</option>${frontliners.map(f=>`<option>${esc(f.name)}</option>`).join("")}</select><label>Tanggal</label><input type="date" id="ddate" value="${new Date().toISOString().slice(0,10)}" onchange="renderDaily()"></div><div id="dailyTable"></div>`;
- renderDaily()
+ document.getElementById("screen").innerHTML=`
+<h1>Daily Report</h1>
+<p class="lead">Rekap hasil observasi harian.</p>
+
+<div class="card">
+<label>Tampilan</label>
+<select id="dfilter" onchange="renderDaily()">
+<option value="all">Semua Nama</option>
+${frontliners.map(f=>`<option>${esc(f.name)}</option>`).join("")}
+</select>
+
+<label>Tanggal</label>
+<input type="date" id="ddate"
+value="${new Date().toISOString().slice(0,10)}"
+onchange="renderDaily()">
+</div>
+
+<div id="dailyTable"></div>
+
+<div class="btnrow">
+<button class="btn danger" onclick="clearObservations()">
+🗑️ HAPUS SEMUA DATA
+</button>
+</div>
+`;
+
+renderDaily();
 }
 function renderDaily(){
   let d=document.getElementById("ddate")?.value||"";
