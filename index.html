@@ -85,14 +85,69 @@ label{display:block;font-weight:700;font-size:13px;margin:10px 0 6px}input,selec
 
 <script>
 const master = [
- {name:"Greeting",items:["Senyum sapa salam","Memperkenalkan diri dan sebut nama","Jika sudah kenal sebut nama nasabah","Menanyakan nama nasabah","Menanyakan kebutuhan nasabah"]},
- {name:"Socialization",items:["Menginformasikan survey layanan oleh Hallo BCA","Menginformasikan survey layanan oleh Gallup"]},
- {name:"Education",items:["Melakukan edukasi VOC BSQ kepada nasabah perorangan dan PT","Melakukan edukasi VOC CE kepada nasabah K1","Melakukan edukasi penggunaan aplikasi dan mesin digital"]},
- {name:"Telling",items:["Melakukan penawaran produk-produk","Menginformasikan event yang akan diselenggarakan"]},
- {name:"Satisfaction",items:["Memproses transaksi dengan cepat","Melayani dengan fokus","Memproses transaksi dengan teliti","Memberikan penjelasan yang lengkap","Mengatasi solusi dengan tuntas"]},
- {name:"Appreciation",items:["Menanyakan kebutuhan lain sebelum mengakhiri layanan","Menyampaikan ucapan terima kasih","Menyampaikan kata-kata magic word"]},
- {name:"Checking",items:["Melakukan cek nasabah K1","Menggali kebutuhan nasabah"]},
- {name:"Report & FollowUp",items:["Menginput penawaran solusi yang ditawarkan","Menindaklanjuti setiap penawaran solusi yang dilakukan"]}
+  {
+    name:"Greeting",
+    items:[
+      "Senyum sapa salam",
+      "Memperkenalkan diri dan sebut nama",
+      "Jika sudah kenal sebut nama nasabah",
+      "Menanyakan nama nasabah",
+      "Menanyakan kebutuhan nasabah"
+    ]
+  },
+  {
+    name:"Socialization",
+    items:[
+      "Menginformasikan survey layanan VOC BSQ kepada nasabah Non K1",
+      "Menginformasikan survey layanan VOC CE kepada nasabah K1"
+    ]
+  },
+  {
+    name:"Education",
+    items:[
+      "Melakukan edukasi VOC BSQ kepada nasabah Non K1",
+      "Melakukan edukasi VOC CE kepada nasabah K1",
+      "Melakukan edukasi penggunaan aplikasi dan mesin digital"
+    ]
+  },
+  {
+    name:"Telling",
+    items:[
+      "Melakukan penawaran produk sesuai kebutuhan nasabah",
+      "Memberikan solusi produk yang sesuai dengan kebutuhan nasabah"
+    ]
+  },
+  {
+    name:"Satisfaction",
+    items:[
+      "Memproses transaksi dengan cepat",
+      "Melayani dengan fokus",
+      "Memproses transaksi dengan teliti",
+      "Memberikan penjelasan yang lengkap",
+      "Memberikan solusi dengan tuntas"
+    ]
+  },
+  {
+    name:"Appreciation",
+    items:[
+      "Menanyakan kebutuhan lain sebelum mengakhiri layanan",
+      "Menyampaikan ucapan terima kasih",
+      "Menyampaikan kata-kata magic word"
+    ]
+  },
+  {
+    name:"Checking",
+    items:[
+      "Melakukan pengecekan nasabah K1 untuk melakukan VOC CE"
+    ]
+  },
+  {
+    name:"Report & FollowUp",
+    items:[
+      "Menginput penawaran solusi yang diberikan",
+      "Menindaklanjuti setiap penawaran solusi yang diberikan"
+    ]
+  }
 ];
 let observations = JSON.parse(localStorage.getItem("diref_obs")||"[]");
 let frontliners = JSON.parse(localStorage.getItem("diref_frontliners")||"[]");
