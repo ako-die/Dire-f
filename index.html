@@ -345,10 +345,137 @@ function scorePage(){
  let names=[...new Set(observations.map(o=>o.name))];
  document.getElementById("screen").innerHTML=`<h1>Score Observasi</h1><p class="lead">Score, review, improvement, dan histori konsistensi.</p><div class="card"><label>Nama Frontliner</label><select id="sname" onchange="renderScore()"><option value="">Pilih nama</option>${names.map(n=>`<option>${esc(n)}</option>`).join("")}</select></div><div id="scoreResult"></div>`
 }
-function renderScore(){let n=document.getElementById("sname").value,r=document.getElementById("scoreResult");if(!n){r.innerHTML="";return}let rows=observations.filter(o=>o.name===n).sort((a,b)=>a.date.localeCompare(b.date)),avg=rows.length?rows.reduce((a,o)=>a+o.score,0)/rows.length:0,stable=rows.length>=2&&Math.max(...rows.map(o=>o.score))-Math.min(...rows.map(o=>o.score))<=25?"KONSISTEN":"PERLU PERHATIAN";
-let review=avg>=87.5?"Performa menunjukkan hasil yang baik. Pertahankan konsistensi pada seluruh aspek.":"Masih terdapat area yang perlu ditingkatkan agar performa lebih konsisten.";
-let low=[];rows.forEach(o=>o.sections.forEach((s,i)=>{if(s.status!=="Complete")low.push(master[i].name)}));low=[...new Set(low)];
-r.innerHTML=`<div class="card"><div class="kpi"><div class="box"><div>Rata-rata Score</div><div class="num">${avg.toFixed(1)}</div></div><div class="box"><div>Status</div><div class="pill">${stable}</div></div></div></div><div class="card"><h3>Histori Score</h3><div class="tablewrap"><table class="table"><tr><th>Tanggal</th><th>Score</th><th>Target</th></tr>${rows.map(o=>`<tr><td>${o.date}</td><td>${o.score.toFixed(1)}</td><td>${o.target}</td></tr>`).join("")}</table></div></div><div class="card"><h3>Review</h3><p>${review}</p><h3>Masukan / Improvement</h3><p>${low.length?"Perhatikan konsistensi pada: "+low.join(", ")+".":"Tidak ada aspek yang perlu perhatian khusus pada data ini."}</p></div>`}
+function renderScore(){
+  let n=document.getElementById("sname").value;
+  let r=document.getElementById("scoreResult");
+
+  if(!n){
+    r.innerHTML="";
+    return;
+  }
+
+  let rows=observations
+    .filter(o=>o.name===n)
+    .sort((a,b)=>a.date.localeCompare(b.date));
+
+  function scoreObs(o){
+    let all=[];
+
+    o.sections.forEach(s=>{
+      s.items.forEach(x=>{
+        if(x.status) all.push(
+          x.status==="Complete"?100:
+          x.status==="In Complete"?50:0
+        );
+      });
+    });
+
+    return all.length
+      ? all.reduce((a,b)=>a+b,0)/all.length
+      : 0;
+  }
+
+  rows.forEach(o=>{
+    o.score=scoreObs(o);
+  });
+
+  let avg=rows.length
+    ? rows.reduce((a,o)=>a+o.score,0)/rows.length
+    : 0;
+
+  let stable="BELUM ADA DATA";
+
+  if(rows.length>=2){
+    let scores=rows.map(o=>o.score);
+    let max=Math.max(...scores);
+    let min=Math.min(...scores);
+
+    stable=(max-min<=25)
+      ?"KONSISTEN"
+      :"PERLU PERHATIAN";
+  }
+
+  let low=[];
+
+  rows.forEach(o=>{
+    o.sections.forEach(s=>{
+      s.items.forEach(x=>{
+        if(x.status==="In Complete" || x.status==="No"){
+          low.push({
+            category:s.name,
+            item:x.item,
+            status:x.status
+          });
+        }
+      });
+    });
+  });
+
+  let review=low.length
+    ? low.map(x=>
+        `<li><b>${x.category}</b> — ${x.item}
+        <br><span class="muted">Status: ${x.status}</span></li>`
+      ).join("")
+    : "Tidak ada aspek yang perlu diperhatikan.";
+
+  let suggestion=low.length
+    ? low.map(x=>
+        `<li>Tingkatkan konsistensi pada <b>${x.item}</b> 
+        dalam kategori <b>${x.category}</b>.</li>`
+      ).join("")
+    : "Pertahankan performa dan konsistensi layanan.";
+
+  r.innerHTML=`
+    <div class="card">
+
+      <div class="kpi">
+        <div class="box">
+          <div>Rata-rata Score</div>
+          <div class="num">${avg.toFixed(1)}</div>
+        </div>
+
+        <div class="box">
+          <div>Status</div>
+          <div class="pill">${stable}</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>History Score</h3>
+
+        <div class="tablewrap">
+          <table class="table">
+            <tr>
+              <th>Tanggal</th>
+              <th>Score</th>
+              <th>Target</th>
+            </tr>
+
+            ${rows.map(o=>`
+              <tr>
+                <td>${o.date}</td>
+                <td>${o.score.toFixed(1)}</td>
+                <td>${o.target}</td>
+              </tr>
+            `).join("")}
+
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Review</h3>
+        <ol>${review}</ol>
+      </div>
+
+      <div class="card">
+        <h3>Masukan / Improvement</h3>
+        <ul>${suggestion}</ul>
+      </div>
+
+    </div>
+  `;
+}
 function printPage(){
  document.getElementById("screen").innerHTML=`<h1>Cetak Laporan</h1><p class="lead">Preview laporan dan pilih cetak atau share.</p><div class="card"><label>Nama Frontliner</label><select id="pname"><option value="all">Semua Nama</option>${frontliners.map(f=>`<option>${esc(f.name)}</option>`).join("")}</select><label>Periode mulai</label><input type="date" id="pstart"><label>Periode akhir</label><input type="date" id="pend"><div class="btnrow"><button class="btn primary" onclick="previewReport()">👁 Preview</button><button class="btn success" onclick="window.print()">🖨 Cetak</button><button class="btn warning" onclick="shareReport()">📤 Share / Kirim</button></div></div><div id="preview"></div>`
 }
