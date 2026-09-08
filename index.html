@@ -306,7 +306,10 @@ function saveObs(){
       note:document.getElementById(`note_${mi}_${ii}`)?.value||""
     }))
   }));
-
+    
+let allItems=sections.flatMap(s=>s.items);
+let scored=allItems.filter(x=>x.status);
+let score=scored.length?scored.reduce((a,x)=>a+(x.status==="Complete"?100:x.status==="In Complete"?50:0),0)/scored.length:0;
   let obj={
     id:editId||Date.now(),
     date,
