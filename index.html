@@ -188,14 +188,51 @@ function clearReg(){document.getElementById("rname").value="";document.getElemen
 function editReg(i){let f=frontliners[i],n=prompt("Nama Frontliner",f.name),u=prompt("Unit Kerja",f.unit);if(n&&u){frontliners[i]={name:n,unit:u};saveAll();register()}}
 function delReg(i){if(confirm("Hapus data Frontliner?")){frontliners.splice(i,1);saveAll();register()}}
 function observasi(id=null){
- editId=id;
- let o=id!==null?observations.find(x=>x.id===id):null;
- document.getElementById("screen").innerHTML=`<h1>Observasi Frontliner</h1><p class="lead">Isi data observasi dan checklist penilaian.</p>
- <div class="card"><label>Tanggal Observasi</label><input type="date" id="odate" value="${o?.date||new Date().toISOString().slice(0,10)}">
- <label>Nama Frontliner</label><select id="oname"><option value="">Pilih nama</option>${frontliners.map(f=>`<option ${o?.name===f.name?"selected":""}>${esc(f.name)}</option>`).join("")}</select>
- <label>Target Customer (1–10)</label><input type="number" id="target" min="1" max="10" value="${o?.target||1}"></div>
- <div id="assess">${master.map((m,mi)=>sectionHTML(m,mi,o)).join("")}</div>
- <div class="btnrow"><button class="btn primary" onclick="saveObs()">💾 SAVE</button>${o?`<button class="btn warning" onclick="observasi(${o.id})">✏️ EDIT</button><button class="btn danger" onclick="deleteObs(${o.id})">🗑 DELETE</button>`:""}<button class="btn secondary" onclick="home()">Batal</button></div>`;
+  editId=id;
+
+  let o=id!==null ? observations.find(x=>x.id===id) : null;
+
+  document.getElementById("screen").innerHTML=`
+    <h1>Observasi Frontliner</h1>
+
+    <div class="card">
+      <label>Tanggal Observasi</label>
+      <input type="date" id="odate" value="${o?.date||""}">
+
+      <label>Nama Frontliner</label>
+      <select id="oname">
+        <option value="">Pilih nama Frontliner</option>
+        ${frontliners.map(f=>`
+          <option value="${f.name}" ${o?.name===f.name?"selected":""}>
+            ${f.name}
+          </option>
+        `).join("")}
+      </select>
+
+      <label>Jenis Nasabah</label>
+      <select id="customerType">
+        <option value="">Pilih Jenis Nasabah</option>
+        <option value="Perorangan Non K1">Perorangan Non K1</option>
+        <option value="Perorangan K1">Perorangan K1</option>
+        <option value="PT Non K1">PT Non K1</option>
+        <option value="PT K1">PT K1</option>
+        <option value="Prioritas Non K1">Prioritas Non K1</option>
+        <option value="Prioritas K1">Prioritas K1</option>
+      </select>
+
+      <label>Target Customer (1-10)</label>
+      <input type="number" id="target" min="1" max="10"
+        value="${o?.target||1}">
+
+      <div id="assess">
+        ${master.map((m,mi)=>sectionHTML(m,mi,o)).join("")}
+      </div>
+
+      <div class="btnrow">
+        <button class="btn primary" onclick="saveObs()">💾 SAVE OBSERVASI</button>
+      </div>
+    </div>
+  `;
 }
 function sectionHTML(m,mi,o){
  let saved=o?.sections?.[mi], val=saved?.status||"";
