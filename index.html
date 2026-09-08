@@ -339,7 +339,7 @@ function daily(){
 }
 function renderDaily(){let d=document.getElementById("ddate")?.value, f=document.getElementById("dfilter")?.value||"all";let rows=observations.filter(o=>(!d||o.date===d)&&(f==="all"||o.name===f));document.getElementById("dailyTable").innerHTML=`<div class="card"><div class="tablewrap"><table class="table"><tr><th>Tanggal</th><th>Nama</th><th>Target</th><th>Score</th><th>Aksi</th></tr>${rows.map(o=>`<tr><td>${o.date}</td><td>${esc(o.name)}</td><td>${o.target}</td><td><b>${o.score.toFixed(1)}</b></td><td><button class="btn secondary" onclick="observasi(${o.id})">Lihat/Edit</button></td></tr>`).join("")||"<tr><td colspan=5>Belum ada observasi.</td></tr>"}</table></div></div>`}
 function masterPage(){
- document.getElementById("screen").innerHTML=`<h1>Master Penilaian</h1><p class="lead">Acuan item penilaian untuk observasi dan pengembangan AI.</p>${master.map((m,i)=>`<div class="card"><div class="section"><h3>${i+1}. ${m.name}</h3></div><ol>${m.items.map(x=>`<li>${x}</li>`).join("")}</ol></div>`).join("")}<div class="card"><b>Skema score:</b> Complete = 100, In Complete = 50, No = 50.</div>`
+ document.getElementById("screen").innerHTML=`<h1>Master Penilaian</h1><p class="lead">Acuan item penilaian untuk observasi dan pengembangan AI.</p>${master.map((m,i)=>`<div class="card"><div class="section"><h3>${i+1}. ${m.name}</h3></div><ol>${m.items.map(x=>`<li>${x}</li>`).join("")}</ol></div>`).join("")}<div class="card"><b>Skema score:</b> Complete = 100, In Complete = 50, No = 0.</div>`
 }
 function scorePage(){
  let names=[...new Set(observations.map(o=>o.name))];
