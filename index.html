@@ -288,14 +288,44 @@ function sectionHTML(m,mi,o){
   `;
 }
 function saveObs(){
- let date=document.getElementById("odate").value,name=document.getElementById("oname").value,target=Math.min(10,Math.max(1,Number(document.getElementById("target").value||1)));
- if(!name)return toast("Pilih nama Frontliner");
- let sections=master.map((m,i)=>({status:document.querySelector(`input[name=st${i}]:checked`)?.value||"",note:document.getElementById("note"+i).value}));
- let scored=sections.filter(x=>x.status); if(scored.length<8)return toast("Lengkapi 8 penilaian terlebih dahulu");
- let total=scored.reduce((a,x)=>a+(x.status==="Complete"?100:50),0),score=total/8;
- let obj={id:editId||Date.now(),date,name,target,sections,score};
- if(editId){let i=observations.findIndex(x=>x.id===editId);observations[i]=obj}else observations.push(obj);
- saveAll();toast("Observasi tersimpan");daily()
+  let date=document.getElementById("odate").value;
+  let name=document.getElementById("oname").value;
+  let customerType=document.getElementById("customerType").value;
+  let target=document.getElementById("target").value;
+
+  if(!name)return toast("Pilih nama Frontliner");
+  if(!customerType)return toast("Pilih Jenis Nasabah");
+
+  let sections=master.map((m,mi)=>({
+    name:m.name,
+    items:m.items.map((item,ii)=>({
+      item:item,
+      status:document.querySelector(
+        `input[name="status_${mi}_${ii}"]:checked`
+      )?.value||"",
+      note:document.getElementById(`note_${mi}_${ii}`)?.value||""
+    }))
+  }));
+
+  let obj={
+    id:editId||Date.now(),
+    date,
+    name,
+    customerType,
+    target,
+    sections
+  };
+
+  if(editId){
+    let i=observations.findIndex(x=>x.id===editId);
+    observations[i]=obj;
+  }else{
+    observations.push(obj);
+  }
+
+  saveAll();
+  toast("Observasi tersimpan");
+  daily();
 }
 function deleteObs(id){if(confirm("Hapus hasil observasi ini?")){observations=observations.filter(x=>x.id!==id);saveAll();toast("Observasi dihapus");daily()}}
 function daily(){
