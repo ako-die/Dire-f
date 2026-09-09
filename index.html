@@ -84,7 +84,7 @@ label{display:block;font-weight:700;font-size:13px;margin:10px 0 6px}input,selec
 <div class="toast" id="toast"></div>
 
 <script>
-const master = [
+let master = [
   {
     name:"Greeting",
     items:[
@@ -149,6 +149,11 @@ const master = [
     ]
   }
 ];
+const savedMaster = localStorage.getItem("diref_master");
+
+if(savedMaster){
+  master = JSON.parse(savedMaster);
+}    
 let observations = JSON.parse(localStorage.getItem("diref_obs")||"[]");
 let frontliners = JSON.parse(localStorage.getItem("diref_frontliners")||"[]");
 let editId=null;
