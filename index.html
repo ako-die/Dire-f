@@ -587,11 +587,17 @@ function renderDaily(){
               <td>${o.target||"-"}</td>
               <td><b>${Number(o.score||0).toFixed(1)}</b></td>
               <td>
-                <button class="btn secondary"
-                  onclick="observasi(${o.id})">
-                  Lihat/Edit
-                </button>
-              </td>
+                <td>
+  <button class="btn secondary"
+    onclick="observasi(${o.id})">
+    Lihat/Edit
+  </button>
+
+  <button class="btn danger"
+    onclick="deleteObs(${o.id})">
+    Hapus
+  </button>
+</td>
             </tr>
           `).join("")}
 
