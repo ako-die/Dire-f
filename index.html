@@ -339,9 +339,9 @@ function saveObs(){
     name:m.name,
     items:m.items.map((item,ii)=>({
       item:item,
-     status:document.querySelector(
-  `input[name="status_${mi}_${ii}"]:checked`
-)?.value||""
+    status:document.querySelector(
+`input[name="status_${mi}_${originalIndex}"]:checked`
+)?.value||"" 
       note:document.getElementById(`note_${mi}_${ii}`)?.value||""
     }))
   }));
