@@ -439,23 +439,40 @@ function renderDaily(){
 function masterPage(){
   document.getElementById("screen").innerHTML=`
     <h1>Master Penilaian</h1>
-    <p class="lead">Daftar item penilaian Frontliner.</p>
-
-    <div class="btnrow">
-      <button class="btn primary" onclick="addMasterItem()">
-        ➕ TAMBAH ITEM PENILAIAN
-      </button>
-    </div>
+    <p class="lead">Kelola item penilaian Frontliner.</p>
 
     ${master.map((m,mi)=>`
       <div class="card">
         <h2>${mi+1}. ${m.name}</h2>
 
-        <ol>
-          ${m.items.map(item=>`
-            <li>${item}</li>
-          `).join("")}
-        </ol>
+        ${m.items.map((item,ii)=>`
+          <div style="margin-bottom:12px;">
+            <input
+              type="text"
+              id="master_${mi}_${ii}"
+              value="${esc(item)}"
+            >
+
+            <div class="btnrow">
+              <button class="btn primary"
+                onclick="saveMasterItem(${mi},${ii})">
+                💾 SIMPAN
+              </button>
+
+              <button class="btn danger"
+                onclick="deleteMasterItem(${mi},${ii})">
+                🗑️ HAPUS
+              </button>
+            </div>
+          </div>
+        `).join("")}
+
+        <div class="btnrow">
+          <button class="btn secondary"
+            onclick="addMasterItem(${mi})">
+            ➕ TAMBAH ITEM ${m.name}
+          </button>
+        </div>
       </div>
     `).join("")}
   `;
@@ -463,24 +480,47 @@ function masterPage(){
     function saveMaster(){
   localStorage.setItem("diref_master",JSON.stringify(master));
 }
-    function addMasterItem(){
-  let category=prompt("Masukkan nama kategori:");
-  if(!category)return;
+   function saveMasterItem(mi,ii){
+  let input=document.getElementById(`master_${mi}_${ii}`);
+  if(!input)return;
 
-  let m=master.find(x=>x.name.toLowerCase()===category.toLowerCase());
+  let value=input.value.trim();
 
-  if(!m){
-    return toast("Kategori tidak ditemukan");
+  if(!value){
+    return toast("Item penilaian tidak boleh kosong");
   }
 
-  let item=prompt("Masukkan item penilaian baru:");
+  master[mi].items[ii]=value;
+  saveMaster();
+  toast("Item berhasil disimpan");
+  masterPage();
+}
+
+function addMasterItem(mi){
+  let item=prompt(`Masukkan item baru untuk ${master[mi].name}:`);
+
   if(!item)return;
 
-  m.items.push(item);
+  item=item.trim();
+
+  if(!item){
+    return toast("Item penilaian tidak boleh kosong");
+  }
+
+  master[mi].items.push(item);
   saveMaster();
   toast("Item berhasil ditambahkan");
   masterPage();
 }
+
+function deleteMasterItem(mi,ii){
+  if(confirm("Hapus item penilaian ini?")){
+    master[mi].items.splice(ii,1);
+    saveMaster();
+    toast("Item berhasil dihapus");
+    masterPage();
+  }
+} 
 function scorePage(){
  let names=[...new Set(observations.map(o=>o.name))];
  document.getElementById("screen").innerHTML=`<h1>Score Observasi</h1><p class="lead">Score, review, improvement, dan histori konsistensi.</p><div class="card"><label>Nama Frontliner</label><select id="sname" onchange="renderScore()"><option value="">Pilih nama</option>${names.map(n=>`<option>${esc(n)}</option>`).join("")}</select></div><div id="scoreResult"></div>`
