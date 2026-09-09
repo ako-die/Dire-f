@@ -833,10 +833,210 @@ function renderScore(){
 }
 
 function printPage(){
- document.getElementById("screen").innerHTML=`<h1>Cetak Laporan</h1><p class="lead">Preview laporan dan pilih cetak atau share.</p><div class="card"><label>Nama Frontliner</label><select id="pname"><option value="all">Semua Nama</option>${frontliners.map(f=>`<option>${esc(f.name)}</option>`).join("")}</select><label>Periode mulai</label><input type="date" id="pstart"><label>Periode akhir</label><input type="date" id="pend"><div class="btnrow"><button class="btn primary" onclick="previewReport()">👁 Preview</button><button class="btn success" onclick="window.print()">🖨 Cetak</button><button class="btn warning" onclick="shareReport()">📤 Share / Kirim</button></div></div><div id="preview"></div>`
+  let today=new Date().toISOString().slice(0,10);
+
+  document.getElementById("screen").innerHTML=`
+    <div id="printControls">
+      <h1>Cetak Laporan</h1>
+      <p class="lead">Preview laporan dan pilih cetak atau share.</p>
+
+      <div class="card">
+        <label>Nama Frontliner</label>
+        <select id="pname">
+          <option value="all">Semua Nama</option>
+          ${frontliners.map(f=>`
+            <option value="${esc(f.name)}">${esc(f.name)}</option>
+          `).join("")}
+        </select>
+
+        <label>Periode mulai</label>
+        <input type="date" id="pstart" value="${today}">
+
+        <label>Periode akhir</label>
+        <input type="date" id="pend" value="${today}">
+
+        <div class="btnrow">
+          <button class="btn primary" onclick="previewReport()">
+            👁 Preview
+          </button>
+
+          <button class="btn success" onclick="printReport()">
+            🖨 Cetak
+          </button>
+
+          <button class="btn warning" onclick="shareReport()">
+            📤 Share / Kirim
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div id="preview"></div>
+  `;
+
+  previewReport();
 }
-function previewReport(){let n=document.getElementById("pname").value,s=document.getElementById("pstart").value,e=document.getElementById("pend").value,rows=observations.filter(o=>(n==="all"||o.name===n)&&(!s||o.date>=s)&&(!e||o.date<=e));document.getElementById("preview").innerHTML=`<div class="card"><h2>Digital Report Frontliner</h2><p><b>Periode:</b> ${s||"-"} s/d ${e||"-"}</p><div class="tablewrap"><table class="table"><tr><th>Tanggal</th><th>Nama</th><th>Score</th></tr>${rows.map(o=>`<tr><td>${o.date}</td><td>${esc(o.name)}</td><td>${o.score.toFixed(1)}</td></tr>`).join("")||"<tr><td colspan=3>Tidak ada data.</td></tr>"}</table></div></div>`}
-async function shareReport(){let txt="DIRE-F — Digital Report Frontliner\\nLaporan observasi";if(navigator.share){try{await navigator.share({title:"DIRE-F Report",text:txt})}catch(e){}}else{navigator.clipboard?.writeText(txt);toast("Ringkasan disalin")}}
+
+function previewReport(){
+  let n=document.getElementById("pname").value;
+  let s=document.getElementById("pstart").value;
+  let e=document.getElementById("pend").value;
+
+  let rows=observations.filter(o=>
+    (n==="all"||o.name===n)&&
+    (!s||o.date>=s)&&
+    (!e||o.date<=e)
+  );
+
+  let avg=rows.length
+    ?rows.reduce((a,o)=>a+Number(o.score||0),0)/rows.length
+    :0;
+
+  document.getElementById("preview").innerHTML=`
+    <div class="card">
+      <h2>Digital Report Frontliner</h2>
+
+      <p><b>Nama:</b>
+        ${n==="all"?"Semua Nama":esc(n)}
+      </p>
+
+      <p><b>Periode:</b>
+        ${s||"-"} s/d ${e||"-"}
+      </p>
+
+      <p><b>Rata-rata Score:</b>
+        ${avg.toFixed(1)}
+      </p>
+
+      <div class="tablewrap">
+        <table class="table">
+          <tr>
+            <th>Tanggal</th>
+            <th>Nama</th>
+            <th>Target</th>
+            <th>Score</th>
+          </tr>
+
+          ${
+            rows.map(o=>`
+              <tr>
+                <td>${o.date||"-"}</td>
+                <td>${esc(o.name)}</td>
+                <td>${o.target||"-"}</td>
+                <td>${Number(o.score||0).toFixed(1)}</td>
+              </tr>
+            `).join("") ||
+            `<tr>
+              <td colspan="4">Tidak ada data.</td>
+            </tr>`
+          }
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+function printReport(){
+  let style=document.createElement("style");
+
+  style.id="diref-print-style";
+
+  style.innerHTML=`
+    @media print{
+      body{
+        background:#fff!important;
+      }
+
+      .top,
+      .bottom,
+      #printControls{
+        display:none!important;
+      }
+
+      .content{
+        max-width:none!important;
+        padding:0!important;
+        margin:0!important;
+      }
+
+      #preview{
+        display:block!important;
+      }
+
+      #preview .card{
+        box-shadow:none!important;
+        border:0!important;
+        margin:0!important;
+        padding:0!important;
+      }
+
+      #preview h2{
+        font-size:18pt!important;
+        margin:0 0 8pt!important;
+      }
+
+      #preview table{
+        width:100%!important;
+        font-size:10pt!important;
+        border-collapse:collapse!important;
+      }
+
+      #preview th,
+      #preview td{
+        border:1px solid #ccc!important;
+        padding:5pt!important;
+      }
+    }
+
+    @page{
+      size:A4;
+      margin:12mm;
+    }
+  `;
+
+  document.head.appendChild(style);
+
+  window.print();
+
+  setTimeout(()=>{
+    style.remove();
+  },1000);
+}
+
+async function shareReport(){
+  let n=document.getElementById("pname").value;
+  let s=document.getElementById("pstart").value;
+  let e=document.getElementById("pend").value;
+
+  let rows=observations.filter(o=>
+    (n==="all"||o.name===n)&&
+    (!s||o.date>=s)&&
+    (!e||o.date<=e)
+  );
+
+  let avg=rows.length
+    ?rows.reduce((a,o)=>a+Number(o.score||0),0)/rows.length
+    :0;
+
+  let txt=
+    `DIRE-F — Digital Report Frontliner\n`+
+    `Nama: ${n==="all"?"Semua Nama":n}\n`+
+    `Periode: ${s||"-"} s/d ${e||"-"}\n`+
+    `Jumlah observasi: ${rows.length}\n`+
+    `Rata-rata score: ${avg.toFixed(1)}`;
+
+  if(navigator.share){
+    try{
+      await navigator.share({
+        title:"DIRE-F Report",
+        text:txt
+      });
+    }catch(e){}
+  }else{
+    await navigator.clipboard?.writeText(txt);
+    toast("Ringkasan disalin");
+  }
+}
 function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
 </script>
   <script>  
