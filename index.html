@@ -195,51 +195,126 @@ function delReg(i){if(confirm("Hapus data Frontliner?")){frontliners.splice(i,1)
 function observasi(id=null){
   editId=id;
 
-  let o=id!==null ? observations.find(x=>x.id===id) : null;
+  let o=id!==null
+    ? observations.find(x=>x.id===id)
+    : null;
+
+  let customerType=o?.customerType||"";
 
   document.getElementById("screen").innerHTML=`
     <h1>Observasi Frontliner</h1>
+    <p class="lead">Checklist dan penilaian layanan frontliner.</p>
 
     <div class="card">
+
       <label>Tanggal Observasi</label>
-      <input type="date" id="odate" value="${o?.date||""}">
+      <input
+        type="date"
+        id="odate"
+        value="${o?.date||""}"
+      >
 
       <label>Nama Frontliner</label>
       <select id="oname">
         <option value="">Pilih nama Frontliner</option>
         ${frontliners.map(f=>`
-          <option value="${f.name}" ${o?.name===f.name?"selected":""}>
-            ${f.name}
+          <option
+            value="${esc(f.name)}"
+            ${o?.name===f.name?"selected":""}
+          >
+            ${esc(f.name)}
           </option>
         `).join("")}
       </select>
 
       <label>Jenis Nasabah</label>
-      <select id="customerType">
+      <select id="customerType" onchange="updateAssessment()">
         <option value="">Pilih Jenis Nasabah</option>
-        <option value="Perorangan Non K1">Perorangan Non K1</option>
-        <option value="Perorangan K1">Perorangan K1</option>
-        <option value="PT Non K1">PT Non K1</option>
-        <option value="PT K1">PT K1</option>
-        <option value="Prioritas Non K1">Prioritas Non K1</option>
-        <option value="Prioritas K1">Prioritas K1</option>
+        <option value="Perorangan Non K1"
+          ${customerType==="Perorangan Non K1"?"selected":""}>
+          Perorangan Non K1
+        </option>
+        <option value="Perorangan K1"
+          ${customerType==="Perorangan K1"?"selected":""}>
+          Perorangan K1
+        </option>
+        <option value="PT Non K1"
+          ${customerType==="PT Non K1"?"selected":""}>
+          PT Non K1
+        </option>
+        <option value="PT K1"
+          ${customerType==="PT K1"?"selected":""}>
+          PT K1
+        </option>
+        <option value="Prioritas Non K1"
+          ${customerType==="Prioritas Non K1"?"selected":""}>
+          Prioritas Non K1
+        </option>
+        <option value="Prioritas K1"
+          ${customerType==="Prioritas K1"?"selected":""}>
+          Prioritas K1
+        </option>
       </select>
 
       <label>Target Customer (1-10)</label>
-      <input type="number" id="target" min="1" max="10"
-        value="${o?.target||1}">
+      <input
+        type="number"
+        id="target"
+        min="1"
+        max="10"
+        value="${o?.target||1}"
+      >
 
       <div id="assess">
-        ${master.map((m,mi)=>sectionHTML(m,mi,o)).join("")}
+        ${master.map((m,mi)=>
+          sectionHTML(m,mi,o,customerType)
+        ).join("")}
       </div>
 
       <div class="btnrow">
-        <button class="btn primary" onclick="saveObs()">💾 SAVE OBSERVASI</button>
+        <button
+          class="btn primary"
+          onclick="saveObs()"
+        >
+          💾 SAVE OBSERVASI
+        </button>
       </div>
+
     </div>
   `;
 }
-function sectionHTML(m,mi,o){
+
+
+function sectionHTML(m,mi,o,customerType=""){
+  let isK1=customerType && !customerType.includes("Non K1");
+
+  let items=m.items
+    .map((item,index)=>({
+      item,
+      index
+    }))
+    .filter(x=>{
+      let text=x.item.toLowerCase();
+
+      if(text.includes("bsq")){
+        return !isK1;
+      }
+
+      if(text.includes("ce")){
+        return isK1;
+      }
+
+      if(m.name==="Checking"){
+        return isK1;
+      }
+
+      return true;
+    });
+
+  if(!items.length){
+    return "";
+  }
+
   let saved=o?.sections?.[mi];
 
   return `
@@ -247,93 +322,176 @@ function sectionHTML(m,mi,o){
       <div class="section">
         <h3>${mi+1}. ${m.name}</h3>
 
-        ${m.items.map((item,ii)=>{
-          let val=saved?.items?.[ii]?.status||"";
+        ${items.map(x=>{
+          let originalIndex=x.index;
+          let val=saved?.items?.[originalIndex]?.status||"";
+          let note=saved?.items?.[originalIndex]?.note||"";
 
           return `
             <div class="obs-item">
-              <strong>${ii+1}. ${item}</strong>
+
+              <strong>
+                ${originalIndex+1}. ${esc(x.item)}
+              </strong>
 
               <div class="status">
+
                 <label>
-                  <input type="radio"
-                    name="status_${mi}_${ii}"
+                  <input
+                    type="radio"
+                    name="status_${mi}_${originalIndex}"
                     value="Complete"
-                    ${val==="Complete"?"checked":""}>
+                    ${val==="Complete"?"checked":""}
+                  >
                   Complete<br>(100)
                 </label>
 
                 <label>
-                  <input type="radio"
-                    name="status_${mi}_${ii}"
+                  <input
+                    type="radio"
+                    name="status_${mi}_${originalIndex}"
                     value="In Complete"
-                    ${val==="In Complete"?"checked":""}>
+                    ${val==="In Complete"?"checked":""}
+                  >
                   In Complete<br>(50)
                 </label>
 
                 <label>
-                  <input type="radio"
-                    name="status_${mi}_${ii}"
+                  <input
+                    type="radio"
+                    name="status_${mi}_${originalIndex}"
                     value="No"
-                    ${val==="No"?"checked":""}>
+                    ${val==="No"?"checked":""}
+                  >
                   No<br>(0)
                 </label>
+
               </div>
 
               <label>Catatan Observasi</label>
+
               <textarea
-                id="note_${mi}_${ii}"
+                id="note_${mi}_${originalIndex}"
                 placeholder="Tulis catatan observasi..."
-              >${saved?.items?.[ii]?.note||""}</textarea>
+              >${esc(note)}</textarea>
+
             </div>
           `;
         }).join("")}
+
       </div>
     </div>
   `;
 }
-function saveObs(){
-  let date=document.getElementById("odate").value;
-  let name=document.getElementById("oname").value;
-  let customerType=document.getElementById("customerType").value;
-  let target=document.getElementById("target").value;
 
-  if(!name)return toast("Pilih nama Frontliner");
-  if(!customerType)return toast("Pilih Jenis Nasabah");
+
+function updateAssessment(){
+  let o=editId!==null
+    ? observations.find(x=>x.id===editId)
+    : null;
+
+  let customerType=
+    document.getElementById("customerType")?.value||"";
+
+  document.getElementById("assess").innerHTML=
+    master.map((m,mi)=>
+      sectionHTML(m,mi,o,customerType)
+    ).join("");
+}
+
+
+function saveObs(){
+  let date=
+    document.getElementById("odate").value;
+
+  let name=
+    document.getElementById("oname").value;
+
+  let customerType=
+    document.getElementById("customerType").value;
+
+  let target=
+    document.getElementById("target").value;
+
+  if(!date){
+    return toast("Pilih tanggal observasi");
+  }
+
+  if(!name){
+    return toast("Pilih nama Frontliner");
+  }
+
+  if(!customerType){
+    return toast("Pilih Jenis Nasabah");
+  }
 
   let sections=master.map((m,mi)=>({
     name:m.name,
+
     items:m.items.map((item,ii)=>({
       item:item,
-      status:document.querySelector(
-        `input[name="status_${mi}_${ii}"]:checked`
-      )?.value||"",
-      note:document.getElementById(`note_${mi}_${ii}`)?.value||""
+
+      status:
+        document.querySelector(
+          `input[name="status_${mi}_${ii}"]:checked`
+        )?.value||"",
+
+      note:
+        document.getElementById(
+          `note_${mi}_${ii}`
+        )?.value||""
     }))
   }));
-    
-let allItems=sections.flatMap(s=>s.items);
-let scored=allItems.filter(x=>x.status);
-let score=scored.length?scored.reduce((a,x)=>a+(x.status==="Complete"?100:x.status==="In Complete"?50:0),0)/scored.length:0;
+
+  let allItems=sections.flatMap(s=>s.items);
+
+  let scored=allItems.filter(x=>x.status);
+
+  let score=
+    scored.length
+      ? scored.reduce((a,x)=>
+          a+
+          (
+            x.status==="Complete"
+              ?100
+              :x.status==="In Complete"
+                ?50
+                :0
+          ),0
+        )/scored.length
+      :0;
+
   let obj={
     id:editId||Date.now(),
     date,
     name,
     customerType,
     target,
-    sections, 
-      score
+    sections,
+    score
   };
 
   if(editId){
-    let i=observations.findIndex(x=>x.id===editId);
-    observations[i]=obj;
+    let i=observations.findIndex(
+      x=>x.id===editId
+    );
+
+    if(i!==-1){
+      observations[i]=obj;
+    }else{
+      observations.push(obj);
+    }
+
   }else{
     observations.push(obj);
   }
 
   saveAll();
+
+  editId=null;
+
   toast("Observasi tersimpan");
+
   daily();
 }
  function deleteObs(id){
