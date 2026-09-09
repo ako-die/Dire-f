@@ -441,6 +441,12 @@ function masterPage(){
     <h1>Master Penilaian</h1>
     <p class="lead">Daftar item penilaian Frontliner.</p>
 
+    <div class="btnrow">
+      <button class="btn primary" onclick="addMasterItem()">
+        ➕ TAMBAH ITEM PENILAIAN
+      </button>
+    </div>
+
     ${master.map((m,mi)=>`
       <div class="card">
         <h2>${mi+1}. ${m.name}</h2>
@@ -453,6 +459,27 @@ function masterPage(){
       </div>
     `).join("")}
   `;
+}
+    function saveMaster(){
+  localStorage.setItem("diref_master",JSON.stringify(master));
+}
+    function addMasterItem(){
+  let category=prompt("Masukkan nama kategori:");
+  if(!category)return;
+
+  let m=master.find(x=>x.name.toLowerCase()===category.toLowerCase());
+
+  if(!m){
+    return toast("Kategori tidak ditemukan");
+  }
+
+  let item=prompt("Masukkan item penilaian baru:");
+  if(!item)return;
+
+  m.items.push(item);
+  saveMaster();
+  toast("Item berhasil ditambahkan");
+  masterPage();
 }
 function scorePage(){
  let names=[...new Set(observations.map(o=>o.name))];
