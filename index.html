@@ -318,14 +318,7 @@ function observasi(id=null){
     </div>
   `;
 }
-    function updateAssessment(){
-  let o=editId!==null
-    ? observations.find(x=>x.id===editId)
-    : null;
-
-  document.getElementById("assess").innerHTML=
-    master.map((m,mi)=>sectionHTML(m,mi,o)).join("");
-}
+    
 function saveObs(){
   let date=document.getElementById("odate").value;
   let name=document.getElementById("oname").value;
