@@ -437,7 +437,22 @@ function renderDaily(){
     </div>`;
 }
 function masterPage(){
- document.getElementById("screen").innerHTML=`<h1>Master Penilaian</h1><p class="lead">Acuan item penilaian untuk observasi dan pengembangan AI.</p>${master.map((m,i)=>`<div class="card"><div class="section"><h3>${i+1}. ${m.name}</h3></div><ol>${m.items.map(x=>`<li>${x}</li>`).join("")}</ol></div>`).join("")}<div class="card"><b>Skema score:</b> Complete = 100, In Complete = 50, No = 0.</div>`
+  document.getElementById("screen").innerHTML=`
+    <h1>Master Penilaian</h1>
+    <p class="lead">Daftar item penilaian Frontliner.</p>
+
+    ${master.map((m,mi)=>`
+      <div class="card">
+        <h2>${mi+1}. ${m.name}</h2>
+
+        <ol>
+          ${m.items.map(item=>`
+            <li>${item}</li>
+          `).join("")}
+        </ol>
+      </div>
+    `).join("")}
+  `;
 }
 function scorePage(){
  let names=[...new Set(observations.map(o=>o.name))];
