@@ -937,72 +937,125 @@ function previewReport(){
 }
 
 function printReport(){
-  let style=document.createElement("style");
 
-  style.id="diref-print-style";
+  let preview=document.getElementById("preview");
 
-  style.innerHTML=`
-    @media print{
-      body{
-        background:#fff!important;
-      }
+  if(!preview || !preview.innerHTML.trim()){
+    return toast("Buat Preview terlebih dahulu");
+  }
 
-      .top,
-      .bottom,
-      #printControls{
-        display:none!important;
-      }
+  let win=window.open("","_blank");
 
-      .content{
-        max-width:none!important;
-        padding:0!important;
-        margin:0!important;
-      }
+  if(!win){
+    return toast("Izinkan pop-up untuk mencetak laporan");
+  }
 
-      #preview{
-        display:block!important;
-      }
+  win.document.open();
 
-      #preview .card{
-        box-shadow:none!important;
-        border:0!important;
-        margin:0!important;
-        padding:0!important;
-      }
+  win.document.write(`
+    <!DOCTYPE html>
+    <html>
+    <head>
 
-      #preview h2{
-        font-size:18pt!important;
-        margin:0 0 8pt!important;
-      }
+      <title>DIRE-F Digital Report</title>
 
-      #preview table{
-        width:100%!important;
-        font-size:10pt!important;
-        border-collapse:collapse!important;
-      }
+      <style>
 
-      #preview th,
-      #preview td{
-        border:1px solid #ccc!important;
-        padding:5pt!important;
-      }
-    }
+        @page{
+          size:A4;
+          margin:15mm;
+        }
 
-    @page{
-      size:A4;
-      margin:12mm;
-    }
-  `;
+        *{
+          box-sizing:border-box;
+        }
 
-  document.head.appendChild(style);
+        body{
+          margin:0;
+          padding:0;
+          background:#fff;
+          color:#111;
+          font-family:Arial,sans-serif;
+        }
 
-  window.print();
+        .print-header{
+          margin-bottom:14px;
+          padding-bottom:8px;
+          border-bottom:2px solid #1d4ed8;
+        }
+
+        .print-header h1{
+          margin:0;
+          font-size:22px;
+          font-weight:700;
+        }
+
+        .print-header p{
+          margin:3px 0 0;
+          font-size:11px;
+        }
+
+        .card{
+          width:100%;
+          margin:0;
+          padding:0;
+          border:0;
+          box-shadow:none;
+          background:#fff;
+        }
+
+        h2{
+          margin:0 0 12px;
+          font-size:18px;
+        }
+
+        p{
+          margin:5px 0;
+          font-size:11px;
+        }
+
+        table{
+          width:100%;
+          border-collapse:collapse;
+          margin-top:14px;
+          font-size:10px;
+        }
+
+        th,
+        td{
+          border:1px solid #999;
+          padding:7px;
+          text-align:left;
+        }
+
+        th{
+          font-weight:700;
+        }
+
+      </style>
+
+    </head>
+
+    <body>
+
+      <div class="print-header">
+        <h1>DIRE-F</h1>
+        <p>Digital Report Frontliner</p>
+      </div>
+
+      ${preview.innerHTML}
+
+    </body>
+    </html>
+  `);
+
+  win.document.close();
 
   setTimeout(()=>{
-    style.remove();
-  },1000);
+    win.focus();
+    win.print();
+  },500);
 }
-
 async function shareReport(){
   let n=document.getElementById("pname").value;
   let s=document.getElementById("pstart").value;
