@@ -215,7 +215,7 @@ function observasi(id=null){
       </select>
 
       <label>Jenis Nasabah</label>
-      <select id="customerType">
+    <select id="customerType" onchange="updateAssessment()">
         <option value="">Pilih Jenis Nasabah</option>
         <option value="Perorangan Non K1">Perorangan Non K1</option>
         <option value="Perorangan K1">Perorangan K1</option>
@@ -239,7 +239,32 @@ function observasi(id=null){
     </div>
   `;
 }
-function sectionHTML(m,mi,o){
+}
+    function sectionHTML(m,mi,o){
+  let customerType=document.getElementById("customerType")?.value||o?.customerType||"";
+
+  let isK1=customerType && !customerType.includes("Non K1");
+
+  let items=m.items.filter(item=>{
+    let text=item.toLowerCase();
+
+    if(text.includes("bsq")){
+      return !isK1;
+    }
+
+    if(text.includes("ce")){
+      return isK1;
+    }
+
+    if(m.name==="Checking"){
+      return isK1;
+    }
+
+    return true;
+  });
+
+  if(!items.length)return "";
+
   let saved=o?.sections?.[mi];
 
   return `
@@ -247,17 +272,18 @@ function sectionHTML(m,mi,o){
       <div class="section">
         <h3>${mi+1}. ${m.name}</h3>
 
-        ${m.items.map((item,ii)=>{
-          let val=saved?.items?.[ii]?.status||"";
+        ${items.map((item,ii)=>{
+          let originalIndex=m.items.indexOf(item);
+          let val=saved?.items?.[originalIndex]?.status||"";
 
           return `
             <div class="obs-item">
-              <strong>${ii+1}. ${item}</strong>
+              <strong>${originalIndex+1}. ${item}</strong>
 
               <div class="status">
                 <label>
                   <input type="radio"
-                    name="status_${mi}_${ii}"
+                    name="status_${mi}_${originalIndex}"
                     value="Complete"
                     ${val==="Complete"?"checked":""}>
                   Complete<br>(100)
@@ -265,7 +291,7 @@ function sectionHTML(m,mi,o){
 
                 <label>
                   <input type="radio"
-                    name="status_${mi}_${ii}"
+                    name="status_${mi}_${originalIndex}"
                     value="In Complete"
                     ${val==="In Complete"?"checked":""}>
                   In Complete<br>(50)
@@ -273,7 +299,7 @@ function sectionHTML(m,mi,o){
 
                 <label>
                   <input type="radio"
-                    name="status_${mi}_${ii}"
+                    name="status_${mi}_${originalIndex}"
                     value="No"
                     ${val==="No"?"checked":""}>
                   No<br>(0)
@@ -282,15 +308,23 @@ function sectionHTML(m,mi,o){
 
               <label>Catatan Observasi</label>
               <textarea
-                id="note_${mi}_${ii}"
+                id="note_${mi}_${originalIndex}"
                 placeholder="Tulis catatan observasi..."
-              >${saved?.items?.[ii]?.note||""}</textarea>
+              >${saved?.items?.[originalIndex]?.note||""}</textarea>
             </div>
           `;
         }).join("")}
       </div>
     </div>
   `;
+}
+    function updateAssessment(){
+  let o=editId!==null
+    ? observations.find(x=>x.id===editId)
+    : null;
+
+  document.getElementById("assess").innerHTML=
+    master.map((m,mi)=>sectionHTML(m,mi,o)).join("");
 }
 function saveObs(){
   let date=document.getElementById("odate").value;
@@ -305,9 +339,9 @@ function saveObs(){
     name:m.name,
     items:m.items.map((item,ii)=>({
       item:item,
-      status:document.querySelector(
-        `input[name="status_${mi}_${ii}"]:checked`
-      )?.value||"",
+     status:document.querySelector(
+  `input[name="status_${mi}_${ii}"]:checked`
+)?.value||""
       note:document.getElementById(`note_${mi}_${ii}`)?.value||""
     }))
   }));
