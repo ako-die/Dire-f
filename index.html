@@ -36,6 +36,10 @@
 <p>Digital Report Frontliner — Hasil Observasi</p>
 </div>
 </div><div class="card"><h2>Hasil Observasi</h2><p>Review berdasarkan tindakan dan catatan. Tidak ada nilai angka.</p><div id="result"></div>
+<div id="resultActions" class="actions no-print" style="margin-top:12px;display:none">
+<button class="btn light" onclick="editObservation()">✏️ Edit</button>
+<button class="btn red" onclick="deleteCurrentObservation()">🗑️ Hapus</button>
+</div>
 <div class="actions no-print" style="margin-top:12px">
 <button class="btn purple" onclick="window.print()">🖨️ Cetak Laporan</button>
 </div></div></section><section id="daily" class="page"><div class="card"><h2>Daily Report</h2><div id="dailyList"></div></div></section><section id="monthly" class="page"><div class="card"><h2>Monthly Report</h2><input id="year" type="number"><button class="btn purple" style="width:100%;margin-top:9px" onclick="monthly()">Tampilkan</button><div id="months"></div></div></section><section id="master" class="page"><div class="card"><h2>Master Penilaian</h2><p>8 kategori, 23 item.</p></div><div id="masterList"></div></section></main><footer><button onclick="go('home')">⌂　HOME</button></footer>
@@ -46,6 +50,34 @@ function start(){splash.style.display='none';go('home')}function go(id){document
 const USER_KEY="direF_users_final";function getUsers(){return JSON.parse(localStorage.getItem(USER_KEY)||"[]")}function putUsers(a){localStorage.setItem(USER_KEY,JSON.stringify(a))}function addUser(){let n=userName.value.trim(),u=userUnit.value.trim();if(!n)return alert("Nama petugas wajib diisi.");let a=getUsers();if(a.some(x=>x.name.toLowerCase()===n.toLowerCase()))return alert("Nama petugas sudah terdaftar.");a.push({id:Date.now(),name:n,unit:u});putUsers(a);userName.value="";userUnit.value="";renderUsers();renderUserSelect();alert("Petugas berhasil didaftarkan.")}function removeUser(id){if(confirm("Hapus petugas ini?")){putUsers(getUsers().filter(x=>x.id!==id));renderUsers();renderUserSelect()}}function renderUsers(){let b=document.getElementById("userList");if(!b)return;let a=getUsers();b.innerHTML=a.length?a.map(x=>'<div class="userRow"><span><b>'+e(x.name)+'</b><br><small>'+e(x.unit||"")+'</small></span><button class="btn red" style="flex:0 0 auto" onclick="removeUser('+x.id+')">Hapus</button></div>').join(""):"<p>Belum ada petugas.</p>"}function renderUserSelect(){let s=document.getElementById("obsUser");if(!s)return;let a=getUsers();s.innerHTML=a.length?a.map(x=>'<option value="'+x.id+'">'+e(x.name)+'</option>').join(""): '<option value="">Belum ada petugas — Register dulu</option>'}
 function build(){form.innerHTML=M.map((c,ci)=>'<div class="cat"><div class="cathead">'+(ci+1)+'. '+c[0]+'</div><div class="catbody">'+c[1].map((x,i)=>'<div class="item">'+(i+1)+'. '+e(x)+'<div class="yn"><label class="yes"><input name="q'+ci+'_'+i+'" type="radio" value="Yes">YES</label><label class="no"><input name="q'+ci+'_'+i+'" type="radio" value="No">NO</label></div></div>').join('')+'<div class="noteTitle">📝 Catatan '+c[0]+'</div><textarea id="n'+ci+'" placeholder="Tulis catatan untuk kategori ini..."></textarea></div></div>').join('')}
 function save(){let uid=obsUser.value;if(!uid)return alert("Silakan daftarkan petugas terlebih dahulu.");let u=getUsers().find(x=>String(x.id)===String(uid));let r=M.map((c,ci)=>({name:c[0],items:c[1].map((x,i)=>({item:x,status:(document.querySelector('input[name=q'+ci+'_'+i+']:checked')||{}).value||null})),note:document.getElementById('n'+ci).value.trim()}));let o={id:Date.now(),date:date.value,name:name.value.trim(),type:type.value,results:r};let a=get();a.push(o);put(a);alert('Observasi tersimpan.');view(o.id)}
+let currentObservationId=null;
+function editObservation(){
+ if(!currentObservationId)return;
+ const o=getO().find(x=>x.id===currentObservationId); if(!o)return;
+ putO(getO().filter(x=>x.id!==o.id));
+ go('obs');
+ setTimeout(()=>{
+  document.getElementById("obsUser").value=String(o.userId);
+  document.getElementById("date").value=o.date;
+  document.getElementById("type").value=o.type;
+  o.results.forEach((c,ci)=>{
+   c.items.forEach((it,i)=>{
+    const r=document.querySelector('input[name="q'+ci+'_'+i+'"][value="'+it.status+'"]');
+    if(r)r.checked=true;
+   });
+   const n=document.getElementById("n"+ci); if(n)n.value=c.note||"";
+  });
+ },80);
+}
+function deleteCurrentObservation(){
+ if(!currentObservationId)return;
+ if(confirm("Hapus data observasi ini?")){
+  putO(getO().filter(x=>x.id!==currentObservationId));
+  currentObservationId=null;
+  const ra=document.getElementById("resultActions"); if(ra)ra.style.display="none";
+  results(); alert("Data observasi berhasil dihapus.");
+ }
+}
 function review(o){let out='';o.results.forEach(c=>{let y=c.items.filter(x=>x.status==='Yes').map(x=>x.item),n=c.items.filter(x=>x.status!=='Yes').map(x=>x.item);out+='<div class="result">'+e(c.name)+'</div>';if(y.length)out+='<div class="good"><b>Sudah dilakukan</b><ul>'+y.map(x=>'<li>'+e(x)+'</li>').join('')+'</ul></div>';if(n.length)out+='<div class="improve"><b>Yang harus ditingkatkan</b><ul>'+n.map(x=>'<li>'+e(x)+'</li>').join('')+'</ul></div>';if(c.note)out+='<div class="review"><b>Catatan</b><br>'+e(c.note)+'</div>'});return out}
 function view(id){let o=get().find(x=>x.id===id);if(!o)return;result.innerHTML='<div class="review"><b>'+e(o.name)+'</b><br>'+o.date+' · '+e(o.type)+'</div>'+review(o);go('hasil')}function results(){let a=get();result.innerHTML=a.length?'<div class="review"><b>'+e(a[a.length-1].name)+'</b><br>'+a[a.length-1].date+'</div>'+review(a[a.length-1]):'<p>Belum ada hasil observasi.</p>'}
 function daily(){let a=get();dailyList.innerHTML=a.length?a.slice().reverse().map(o=>'<div class="card"><b>'+e(o.name)+'</b><br>'+o.date+' · '+e(o.type)+'<div class="actions"><button class="btn purple" onclick="view('+o.id+')">Review</button><button class="btn red" onclick="del('+o.id+')">Hapus</button></div></div>').join(''):'<p>Belum ada data.</p>'}function del(id){if(confirm('Hapus observasi ini?')){put(get().filter(x=>x.id!==id));daily()}}
