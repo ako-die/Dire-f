@@ -5,6 +5,7 @@
 .masterText{flex:1;line-height:1.45;}
 .masterActions{display:flex;gap:6px;flex:0 0 auto;}
 .masterActions button{border:0;border-radius:10px;padding:8px 10px;font-weight:700;cursor:pointer;}
+.masterAdd{width:100%;margin-top:12px;border:2px dashed #7b35d1;border-radius:12px;padding:10px;background:#f5edff;color:#4b168f;font-weight:800;cursor:pointer;}
 .masterEdit{background:#eadcff;color:#4b168f;}
 .masterDelete{background:#ffe1e1;color:#a30000;}
 .masterSaveWrap{position:sticky;bottom:72px;background:#fff;padding:12px 0 4px;z-index:5;}
@@ -54,7 +55,7 @@
 </div>
 <div class="actions no-print" style="margin-top:12px">
 <button class="btn purple" onclick="window.print()">🖨️ Cetak Laporan</button>
-</div></div></section><section id="daily" class="page"><div class="card"><h2>Daily Report</h2><div id="dailyList"></div></div></section><section id="monthly" class="page"><div class="card"><h2>Monthly Report</h2><input id="year" type="number"><button class="btn purple" style="width:100%;margin-top:9px" onclick="monthly()">Tampilkan</button><div id="months"></div></div></section><section id="master" class="page"><div class="card"><h2>Master Penilaian</h2><p>8 kategori, 23 item.</p></div><div id="masterList"></div></section></main><footer><button onclick="go('home')">⌂　HOME</button></footer>
+</div></div></section><section id="daily" class="page"><div class="card"><h2>Daily Report</h2><div id="dailyList"></div></div></section><section id="monthly" class="page"><div class="card"><h2>Monthly Report</h2><input id="year" type="number"><button class="btn purple" style="width:100%;margin-top:9px" onclick="monthly()">Tampilkan</button><div id="months"></div></div></section><section id="master" class="page"><div class="card"><h2>Master Penilaian</h2><p id="masterTopInfo">Kelola item penilaian. Edit, tambah, atau hapus item, lalu tekan satu tombol SIMPAN di bagian bawah.</p></div><div id="masterList"></div></section></main><footer><button onclick="go('home')">⌂　HOME</button></footer>
 <script>
 const DEFAULT_MASTER=[['Greeting',['Senyum sapa salam','Memperkenalkan diri dan sebut nama','Jika sudah kenal sebut nama nasabah','Menanyakan nama nasabah','Menanyakan kebutuhan nasabah']],['Socialization',['Menginformasikan survey layanan VOC BSQ','Menginformasikan survey layanan VOC CE']],['Education',['Melakukan edukasi VOC BSQ kepada nasabah Non K1','Melakukan edukasi VOC CE kepada nasabah K1','Melakukan edukasi penggunaan aplikasi dan mesin digital']],['Telling',['Melakukan penawaran produk sesuai kebutuhan nasabah','Memberikan solusi produk yang sesuai dengan kebutuhan nasabah']],['Satisfaction',['Memproses transaksi dengan cepat','Melayani dengan fokus','Memproses transaksi dengan teliti','Memberikan penjelasan yang lengkap','Memberikan solusi dengan tuntas']],['Appreciation',['Menanyakan kebutuhan lain sebelum mengakhiri layanan','Menyampaikan ucapan terima kasih','Menyampaikan kata-kata magic word']],['Checking',['Melakukan pengecekan nasabah K1 untuk melakukan VOC CE']],['Report & Follow Up',['Menginput penawaran solusi yang diberikan','Menindaklanjuti setiap penawaran solusi yang diberikan']]];
 ;
@@ -142,7 +143,18 @@ function daily(){
 function del(id){if(confirm("Hapus observasi ini?")){put(get().filter(x=>x.id!==id));daily();results();}}
 function master(){
  const total=masterDraft.reduce((n,c)=>n+c[1].length,0);
- masterList.innerHTML=masterDraft.map((c,i)=>`<div class="cat"><div class="cathead">${i+1}. ${e(c[0])}</div><div class="catbody">${c[1].map((x,j)=>`<div class="masterItem"><div class="masterText">${j+1}. ${e(x)}</div><div class="masterActions"><button class="masterEdit" onclick="editMasterItem(${i},${j})">✏️ Edit</button><button class="masterDelete" onclick="deleteMasterItem(${i},${j})">🗑️ Hapus</button></div></div>`).join('')}</div></div>`).join('')+`<div class="card masterSaveWrap"><p class="masterInfo">${masterDraft.length} kategori, ${total} item. Perubahan akan digunakan di Observasi setelah tombol SIMPAN ditekan.</p><button class="masterSave" onclick="saveMaster()">💾 SIMPAN MASTER PENILAIAN</button></div>`;
+ const top=document.getElementById('masterTopInfo');
+ if(top) top.textContent=`${masterDraft.length} kategori, ${total} item. Tambahkan atau ubah item, lalu tekan SIMPAN di bagian bawah.`;
+ masterList.innerHTML=masterDraft.map((c,i)=>`<div class="cat"><div class="cathead">${i+1}. ${e(c[0])}</div><div class="catbody">${c[1].map((x,j)=>`<div class="masterItem"><div class="masterText">${j+1}. ${e(x)}</div><div class="masterActions"><button class="masterEdit" onclick="editMasterItem(${i},${j})">✏️ Edit</button><button class="masterDelete" onclick="deleteMasterItem(${i},${j})">🗑️ Hapus</button></div></div>`).join('')}<button class="masterAdd" onclick="addMasterItem(${i})">➕ Tambah Item</button></div></div>`).join('')+`<div class="card masterSaveWrap"><p class="masterInfo">${masterDraft.length} kategori, ${total} item. Semua perubahan akan digunakan di Observasi setelah tombol SIMPAN ditekan.</p><button class="masterSave" onclick="saveMaster()">💾 SIMPAN MASTER PENILAIAN</button></div>`;
+}
+function addMasterItem(ci){
+ const category=masterDraft?.[ci]; if(!category)return;
+ const value=prompt(`Tambah item untuk kategori ${category[0]}:`);
+ if(value===null)return;
+ const text=value.trim();
+ if(!text){alert('Item penilaian tidak boleh kosong.');return;}
+ category[1].push(text);
+ master();
 }
 function editMasterItem(ci,ii){
  const current=masterDraft?.[ci]?.[1]?.[ii]; if(current==null)return;
