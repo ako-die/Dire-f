@@ -316,6 +316,24 @@ function saveMaster(){
  master();
  alert("Master Penilaian berhasil disimpan.\nPerubahan otomatis digunakan pada Observasi baru.");
 }
-function monthly(){let y=Number(year.value)||new Date().getFullYear(),a=get().filter(o=>o.date.startsWith(y));months.innerHTML=Array.from({length:12},(_,i)=>{let m=String(i+1).padStart(2,'0'),r=a.filter(o=>o.date.slice(5,7)===m);return '<div class="result">'+new Date(y,i,1).toLocaleString('id-ID',{month:'long'})+'<br><small>'+(r.length?r.map(o=>e(o.name)).join(', '):'Belum ada observasi')+'</small></div>'}).join('')}
+function monthly(){
+ const y=String(Number(document.getElementById('year')?.value)||new Date().getFullYear());
+ const all=Array.isArray(get())?get():[];
+ const data=all.filter(o=>String(o.date||'').slice(0,4)===y).sort((a,b)=>String(a.date||'').localeCompare(String(b.date||''))||String(a.name||'').localeCompare(String(b.name||'')));
+ const total=data.length;
+ const head='<div class="review"><b>Rekap Tahun '+e(y)+'</b><br>Total observasi: '+total+'<br>Total target nasabah: '+data.reduce((n,o)=>n+Number(o.targetCount||o.customerTarget||5),0)+'</div>';
+ const body=Array.from({length:12},(_,i)=>{
+  const m=String(i+1).padStart(2,'0');
+  const rows=data.filter(o=>String(o.date||'').slice(5,7)===m);
+  const monthName=new Date(Number(y),i,1).toLocaleString('id-ID',{month:'long'});
+  const detail=rows.length?rows.map(o=>{
+   const target=Number(o.targetCount||o.customerTarget||5);
+   const type=o.customerType==='k1'?'Nasabah K1':(o.customerType==='reguler'?'Nasabah Reguler':(o.customerType||'Kategori tidak tercatat'));
+   return '<div class="card" style="margin:8px 0;padding:12px"><b>'+e(o.name||'Nama petugas tidak tercatat')+'</b><br><small>'+e(o.date||'Tanggal tidak tercatat')+' · '+e(o.unit||'')+'</small><br><small>'+e(type)+' · Target '+target+' nasabah</small><button class="btn light" style="width:100%;margin-top:9px" onclick="view('+Number(o.id||0)+')">Lihat Hasil Observasi</button></div>';
+  }).join(''):'<small>Belum ada observasi</small>';
+  return '<details class="result" style="padding:0;overflow:hidden"><summary style="padding:15px;cursor:pointer"><b>'+monthName+'</b><br><small>'+rows.length+' observasi</small></summary><div style="padding:0 12px 12px;font-weight:normal">'+detail+'</div></details>';
+ }).join('');
+ months.innerHTML=head+body;
+}
 document.getElementById("splashBtn").addEventListener("click",function(){document.getElementById("splash").style.display="none"});date.value=new Date().toISOString().slice(0,10);year.value=new Date().getFullYear();customerCount=5;renderUsers();renderUserSelect();build();master();
 </script></body></html>
