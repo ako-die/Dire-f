@@ -292,11 +292,13 @@ function showSummary(id){
  const ra=document.getElementById('resultActions');if(ra)ra.style.display='flex';
 }
 function view(id){
- const o=get().find(x=>x.id===id);if(!o)return;
- currentObservationId=id;
+ const o=get().find(x=>String(x.id)===String(id));if(!o)return;
+ currentObservationId=o.id;
+ // Activate the Hasil Observasi page first. go('hasil') calls results(),
+ // so render the requested Review details after navigation to avoid overwrite.
+ go('hasil');
  result.innerHTML=observationMeta(o)+review(o)+'<button class="btn light no-print" style="width:100%;margin-top:12px" onclick="showSummary('+Number(o.id)+')">‹ Kembali ke Ringkasan Hasil Observasi</button>';
  const ra=document.getElementById("resultActions");if(ra)ra.style.display="flex";
- go('hasil');
 }
 function results(){
  const data=get(),ra=document.getElementById("resultActions");
