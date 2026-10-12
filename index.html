@@ -258,18 +258,50 @@ function review(o){
  return out;
 }
 
+function observationMeta(o){
+ return '<div class="review"><b>'+e(o.name)+'</b><br>'+e(o.unit||'')+'<br>'+e(o.date)+'<br>Kategori nasabah: '+e((o.customerType||'reguler')==='k1'?'Nasabah K1':'Nasabah Reguler')+'<br>Target Customer: '+e(o.targetCount||o.customerTarget||5)+' nasabah</div>';
+}
+function categoryStatus(o,c){
+ const count=Math.min(10,Math.max(1,Number(o.targetCount||o.customerTarget||5)||5));
+ const itemStates=(c.items||[]).map(it=>{
+  let vals=Array.isArray(it.statuses)?Array.from({length:count},(_,j)=>it.statuses[j]||''):[(it.status==='Yes'?'C':it.status==='No'?'N':'')];
+  if(vals.every(v=>!v))return 'unrated';
+  if(vals.every(v=>v==='N'))return 'not-running';
+  if(vals.every(v=>v==='C'))return 'consistent';
+  return 'inconsistent';
+ });
+ if(!itemStates.length||itemStates.every(x=>x==='unrated'))return 'unrated';
+ if(itemStates.every(x=>x==='consistent'))return 'consistent';
+ if(itemStates.every(x=>x==='not-running'))return 'not-running';
+ return 'inconsistent';
+}
+function showSummary(id){
+ const o=get().find(x=>x.id===id);if(!o)return;
+ currentObservationId=id;
+ const labels={consistent:'Konsisten',inconsistent:'Tidak konsisten','not-running':'Tidak melakukan',unrated:'Belum dinilai'};
+ const colors={consistent:'#08743D',inconsistent:'#765300','not-running':'#A71923',unrated:'#625B70'};
+ const backgrounds={consistent:'#D8F7E6',inconsistent:'#FFF0B8','not-running':'#FFE0E0',unrated:'#F0EDF5'};
+ let html=observationMeta(o)+'<div class="compactIntro"><b>Ringkasan Status Observasi</b><div class="compactIntroSub">Status dihitung otomatis dari seluruh item dan '+(o.targetCount||o.customerTarget||5)+' target nasabah. Uraian setiap item tetap tersedia di Review.</div></div>';
+ html+='<div class="compactCategoryList">';
+ (o.results||[]).forEach(c=>{
+  const st=categoryStatus(o,c);
+  html+='<div class="result" style="display:flex;align-items:center;justify-content:space-between;gap:10px"><span>'+e(c.name)+'</span><b style="display:inline-block;white-space:normal;text-align:center;padding:7px 10px;border-radius:10px;background:'+backgrounds[st]+';color:'+colors[st]+'">'+labels[st]+'</b></div>';
+ });
+ html+='</div><button class="btn purple" style="width:100%;margin-top:12px" onclick="view('+Number(o.id)+')">📋 Lihat Uraian Lengkap di Review</button>';
+ result.innerHTML=html;
+ const ra=document.getElementById('resultActions');if(ra)ra.style.display='flex';
+}
 function view(id){
  const o=get().find(x=>x.id===id);if(!o)return;
  currentObservationId=id;
- result.innerHTML='<div class="review"><b>'+e(o.name)+'</b><br>'+e(o.unit||'')+'<br>'+e(o.date)+('<br>Target Customer: '+e(o.targetCount||o.customerTarget||5)+' nasabah')+'</div>'+review(o);
+ result.innerHTML=observationMeta(o)+review(o)+'<button class="btn light no-print" style="width:100%;margin-top:12px" onclick="showSummary('+Number(o.id)+')">‹ Kembali ke Ringkasan Hasil Observasi</button>';
  const ra=document.getElementById("resultActions");if(ra)ra.style.display="flex";
  go('hasil');
 }
 function results(){
  const data=get(),ra=document.getElementById("resultActions");
  if(!data.length){currentObservationId=null;if(ra)ra.style.display="none";result.innerHTML='<p>Belum ada hasil observasi.</p>';return;}
- const o=data[data.length-1];currentObservationId=o.id;if(ra)ra.style.display="flex";
- result.innerHTML='<div class="review"><b>'+e(o.name)+'</b><br>'+e(o.unit||'')+'<br>'+e(o.date)+('<br>Target Customer: '+e(o.targetCount||o.customerTarget||5)+' nasabah')+'</div>'+review(o);
+ const o=data[data.length-1];showSummary(o.id);
 }
 function daily(){
  const data=get();
