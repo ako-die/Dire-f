@@ -13,7 +13,7 @@
 .masterInfo{margin:0 0 10px;color:#5b5365;font-size:13px;}
 
 
-.targetBar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:8px 0 12px}.targetBar span{font-weight:900;color:var(--d);flex:1}.targetBar .btn{flex:0 1 auto}.statusLegend{font-size:12px;font-weight:800;line-height:1.8;margin:8px 0;color:#43345c}.legendComplete{color:#12a765}.legendIncomplete{color:#e6a900}.legendNo{color:#e43f43}.legendEmpty{color:#8c8796}.matrixWrap{overflow-x:auto;max-width:100%;border-radius:12px}.matrix{width:100%;min-width:590px;border-collapse:separate;border-spacing:0;font-size:12px}.matrix th,.matrix td{border-bottom:1px solid #e7def3;border-right:1px solid #e7def3;padding:6px 4px;text-align:center}.matrix th{background:#f1e9ff;color:var(--d);font-weight:900}.matrix th:first-child,.matrix td:first-child{text-align:left;min-width:180px;width:36%;padding-left:9px}.matrix select{padding:6px 2px;border-radius:8px;font-size:11px;font-weight:900;min-width:64px;width:100%;border:1px solid #d8cce9}.matrix select.status-C{background:#d8f7e6;color:#08743d;border-color:#8dd9af}.matrix select.status-I{background:#fff0b8;color:#745100;border-color:#e7c34a}.matrix select.status-N{background:#ffe0e0;color:#a71923;border-color:#efaaaa}.matrix select.status-empty{background:#fff;color:#665b75}.customerLabel{white-space:nowrap}.matrixNote{margin-top:12px}
+.targetBar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:8px 0 12px}.targetBar span{font-weight:900;color:var(--d);flex:1}.targetBar .btn{flex:0 1 auto}.statusLegend{font-size:12px;font-weight:800;line-height:1.8;margin:8px 0;color:#43345c}.legendComplete{color:#12a765}.legendIncomplete{color:#e6a900}.legendNo{color:#e43f43}.legendEmpty{color:#8c8796}.matrixWrap{overflow-x:auto;max-width:100%;border-radius:12px}.matrix{width:100%;min-width:590px;border-collapse:separate;border-spacing:0;font-size:12px}.matrix th,.matrix td{border-bottom:1px solid #e7def3;border-right:1px solid #e7def3;padding:6px 4px;text-align:center}.matrix th{background:#f1e9ff;color:var(--d);font-weight:900}.matrix th:first-child,.matrix td:first-child{text-align:left;min-width:180px;width:36%;padding-left:9px}.matrix select{padding:6px 2px;border-radius:8px;font-size:11px;font-weight:900;min-width:64px;width:100%;border:1px solid #d8cce9}.matrix select.status-C{background:#d8f7e6;color:#08743d;border-color:#8dd9af}.matrix select.status-I{background:#fff0b8;color:#745100;border-color:#e7c34a}.matrix select.status-N{background:#ffe0e0;color:#a71923;border-color:#efaaaa}.matrix select.status-empty{background:#fff;color:#665b75}.matrix th.consistencyHead{min-width:125px;background:#173568;color:#fff}.matrix td.consistencyCell{min-width:125px;font-weight:900;font-size:11px;line-height:1.25;white-space:normal}.consistencyCell.consistent{background:#d8f7e6;color:#08743d}.consistencyCell.inconsistent{background:#fff0b8;color:#745100}.consistencyCell.not-running{background:#ffe0e0;color:#a71923}.consistencyCell.unrated{background:#f3f1f7;color:#70677e}.customerLabel{white-space:nowrap}.matrixNote{margin-top:12px}
 @media(max-width:480px){.matrix{min-width:560px}.matrix th:first-child,.matrix td:first-child{min-width:165px}.matrix select{font-size:10px;padding:5px 1px}}
 
 </style>
@@ -111,9 +111,18 @@ function addFiveCustomers(){
  build();
 }
 function setStatusStyle(sel){sel.classList.remove('status-C','status-I','status-N','status-empty');sel.classList.add(sel.value?'status-'+sel.value:'status-empty');}
+function updateItemConsistency(ci,i){
+ const vals=Array.from({length:customerCount},(_,j)=>document.querySelector('select[name="q'+ci+'_'+i+'_'+j+'"]')?.value||'');
+ const cell=document.getElementById('consistency_'+ci+'_'+i);if(!cell)return;
+ cell.classList.remove('consistent','inconsistent','not-running','unrated');
+ if(vals.every(v=>!v)){cell.textContent='Belum dinilai';cell.classList.add('unrated');return;}
+ if(vals.every(v=>v==='N')){cell.textContent='Tidak menjalankan';cell.classList.add('not-running');return;}
+ if(vals.every(v=>v==='C')){cell.textContent='Konsisten';cell.classList.add('consistent');return;}
+ cell.textContent='Belum konsisten';cell.classList.add('inconsistent');
+}
 function build(){
  const list=activeMaster();
- form.innerHTML=list.map((c,ci)=>'<div class="cat"><div class="cathead">'+(ci+1)+'. '+e(c[0])+'</div><div class="catbody"><div class="matrixWrap"><table class="matrix"><thead><tr><th>Item Penilaian</th>'+Array.from({length:customerCount},(_,j)=>'<th class="customerLabel">Nasabah '+(j+1)+'</th>').join('')+'</tr></thead><tbody>'+c[1].map((x,i)=>'<tr><td>'+(i+1)+'. '+e(x)+'</td>'+Array.from({length:customerCount},(_,j)=>'<td><select aria-label="'+e(x)+' - Nasabah '+(j+1)+'" name="q'+ci+'_'+i+'_'+j+'" class="status-empty" onchange="setStatusStyle(this)"><option value="">—</option><option value="C">Complete</option><option value="I">In Complete</option><option value="N">No</option></select></td>').join('')+'</tr>').join('')+'</tbody></table></div><div class="noteTitle">📝 Catatan '+e(c[0])+'</div><textarea id="n'+ci+'" placeholder="Tulis catatan untuk kategori ini..."></textarea></div></div>').join('');
+ form.innerHTML=list.map((c,ci)=>'<div class="cat"><div class="cathead">'+(ci+1)+'. '+e(c[0])+'</div><div class="catbody"><div class="matrixWrap"><table class="matrix"><thead><tr><th>Item Penilaian</th>'+Array.from({length:customerCount},(_,j)=>'<th class="customerLabel">Nasabah '+(j+1)+'</th>').join('')+'<th class="consistencyHead">Status</th></tr></thead><tbody>'+c[1].map((x,i)=>'<tr><td>'+(i+1)+'. '+e(x)+'</td>'+Array.from({length:customerCount},(_,j)=>'<td><select aria-label="'+e(x)+' - Nasabah '+(j+1)+'" name="q'+ci+'_'+i+'_'+j+'" class="status-empty" onchange="setStatusStyle(this);updateItemConsistency('+ci+','+i+')"><option value="">—</option><option value="C">Complete</option><option value="I">In Complete</option><option value="N">No</option></select></td>').join('')+'<td id="consistency_'+ci+'_'+i+'" class="consistencyCell unrated">Belum dinilai</td></tr>').join('')+'</tbody></table></div><div class="noteTitle">📝 Catatan '+e(c[0])+'</div><textarea id="n'+ci+'" placeholder="Tulis catatan untuk kategori ini..."></textarea></div></div>').join('');
 }
 
 function save(){
@@ -150,6 +159,7 @@ function editObservation(){
     else if(it.status){const sel=document.querySelector('select[name="q'+ci+'_'+i+'_0"]');if(sel){sel.value=it.status==='Yes'?'C':it.status==='No'?'N':'';setStatusStyle(sel);}}
    });
    const n=document.getElementById("n"+ci);if(n)n.value=c.note||"";
+   (c.items||[]).forEach((it,i)=>updateItemConsistency(ci,i));
   });
   window._restoreObs=false;
  },100);
