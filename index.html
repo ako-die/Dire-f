@@ -206,58 +206,44 @@ function review(o){
   (o.results||[]).forEach(c=>{
    const y=(c.items||[]).filter(x=>x.status==='Yes').map(x=>x.item);
    const n=(c.items||[]).filter(x=>x.status!=='Yes').map(x=>x.item);
-   old+='<details class="compactCategory"><summary>'+e(c.name)+' <span class="compactMeta">'+(y.length+n.length)+' item</span></summary>';
-   if(y.length)old+='<div class="good"><b>Sudah dilakukan</b><ul>'+y.map(x=>'<li>'+e(x)+'</li>').join('')+'</ul></div>';
-   if(n.length)old+='<div class="improve"><b>Yang harus ditingkatkan</b><ul>'+n.map(x=>'<li>'+e(x)+'</li>').join('')+'</ul></div>';
+   old+='<details class="compactCategory" open><summary>'+e(c.name)+' <span class="compactMeta">'+(y.length+n.length)+' item</span></summary>';
+   if(y.length)old+='<div class="good"><b>Yang telah dilakukan</b><ul>'+y.map(x=>'<li>'+e(x)+'</li>').join('')+'</ul></div>';
+   if(n.length)old+='<div class="improve"><b>Yang belum dilakukan / perlu ditingkatkan</b><ul>'+n.map(x=>'<li>'+e(x)+'</li>').join('')+'</ul></div>';
    if(c.note)old+='<div class="review"><b>Catatan</b><br>'+e(c.note)+'</div>';
    old+='</details>';
   });
   return old;
  }
- const classify=it=>{
-  const vals=Array.from({length:count},(_,j)=>Array.isArray(it.statuses)?(it.statuses[j]||''):(j===0?(it.status==='Yes'?'C':it.status==='No'?'N':''):''));
-  if(vals.every(v=>v===''))return 'unrated';
-  if(vals.every(v=>v==='N'))return 'not-running';
-  if(vals.every(v=>v==='C'))return 'consistent';
-  return 'inconsistent';
- };
- const label={consistent:'Konsisten',inconsistent:'Belum konsisten','not-running':'Tidak menjalankan',unrated:'Belum dinilai'};
- const color={consistent:'#08743D',inconsistent:'#765300','not-running':'#A71923',unrated:'#625B70'};
- const bg={consistent:'#D8F7E6',inconsistent:'#FFF0B8','not-running':'#FFE0E0',unrated:'#F0EDF5'};
- const cats=(o.results||[]).map(c=>{
-  const items=(c.items||[]).map(it=>({item:it.item,status:classify(it),statuses:Array.from({length:count},(_,j)=>Array.isArray(it.statuses)?(it.statuses[j]||''):(j===0?(it.status==='Yes'?'C':it.status==='No'?'N':''):''))}));
-  const tally={consistent:0,inconsistent:0,'not-running':0,unrated:0};
-  items.forEach(it=>tally[it.status]++);
-  return {...c,items,tally};
- });
- const total={consistent:0,inconsistent:0,'not-running':0,unrated:0};
- cats.forEach(c=>Object.keys(total).forEach(k=>total[k]+=c.tally[k]));
- let out='<div class="compactIntro"><b>Ringkasan Penilaian</b><div class="compactIntroSub">Status setiap item dihitung berdasarkan seluruh '+count+' target nasabah.</div></div>';
- out+='<div class="compactSummary">';
- ['consistent','inconsistent','not-running','unrated'].forEach(k=>out+='<div class="compactStat" style="background:'+bg[k]+';color:'+color[k]+'"><b>'+total[k]+'</b><span>'+label[k]+'</span></div>');
- out+='</div>';
- out+='<div class="compactSectionTitle">Ringkasan per kategori</div>';
- cats.forEach((c,idx)=>{
-  out+='<details class="compactCategory"><summary><span>'+e(c.name)+'</span><span class="compactMeta">'+c.items.length+' item</span></summary>';
-  out+='<div class="compactCategoryBody"><div class="compactMiniStats">';
-  ['consistent','inconsistent','not-running','unrated'].forEach(k=>out+='<span style="background:'+bg[k]+';color:'+color[k]+'">'+c.tally[k]+' '+label[k]+'</span>');
-  out+='</div><div class="compactSectionTitle">Rincian item</div>';
-  c.items.forEach((it,i)=>{
-   out+='<div class="compactItem"><div class="compactItemHead"><span>'+ (i+1)+'. '+e(it.item)+'</span><b style="background:'+bg[it.status]+';color:'+color[it.status]+'">'+label[it.status]+'</b></div>';
-   out+='<div class="compactCustomerStatuses">';
-   it.statuses.forEach((st,j)=>{
-    const sk=st==='C'?'consistent':st==='I'?'inconsistent':st==='N'?'not-running':'unrated';
-    const sl=st==='C'?'Complete':st==='I'?'In Complete':st==='N'?'No':'Belum dinilai';
-    out+='<span style="background:'+bg[sk]+';color:'+color[sk]+'">N'+(j+1)+': '+sl+'</span>';
-   });
-   out+='</div></div>';
+ const valsFor=(it,j)=>Array.isArray(it.statuses)?(it.statuses[j]||''):(j===0?(it.status==='Yes'?'C':it.status==='No'?'N':''):'');
+ const statusLabel=st=>st==='C'?'Complete':st==='I'?'In Complete':st==='N'?'No':'Belum dinilai';
+ const statusBg=st=>st==='C'?'#D8F7E6':st==='I'?'#FFF0B8':st==='N'?'#FFE0E0':'#F0EDF5';
+ const statusFg=st=>st==='C'?'#08743D':st==='I'?'#765300':st==='N'?'#A71923':'#625B70';
+ let out='<div class="compactIntro"><b>Uraian Lengkap Hasil Observasi</b><div class="compactIntroSub">Rincian item dikelompokkan per nasabah. Hijau menunjukkan item yang telah dilakukan; kuning dan merah menunjukkan item yang belum lengkap atau tidak dilakukan.</div></div>';
+ for(let j=0;j<count;j++){
+  const customerItems=[];
+  (o.results||[]).forEach(c=>{
+   const items=(c.items||[]).map(it=>({item:it.item,status:valsFor(it,j)}));
+   customerItems.push({name:c.name,note:c.note,items});
   });
-  if(c.note)out+='<div class="compactNote"><b>Catatan:</b> '+e(c.note)+'</div>';
-  out+='</div></details>';
- });
+  const anyRated=customerItems.some(c=>c.items.some(it=>it.status));
+  if(!anyRated)continue;
+  out+='<div class="compactCustomerBlock"><div class="compactSectionTitle">Nasabah '+(j+1)+'</div>';
+  customerItems.forEach(c=>{
+   const done=c.items.filter(it=>it.status==='C');
+   const need=c.items.filter(it=>it.status==='I'||it.status==='N');
+   const unrated=c.items.filter(it=>!it.status);
+   out+='<details class="compactCategory" open><summary><span>'+e(c.name)+'</span><span class="compactMeta">'+c.items.length+' item</span></summary><div class="compactCategoryBody">';
+   if(done.length)out+='<div class="good"><b>Yang telah dilakukan</b><ul>'+done.map(it=>'<li>'+e(it.item)+'</li>').join('')+'</ul></div>';
+   if(need.length)out+='<div class="improve"><b>Yang belum dilakukan / perlu ditingkatkan</b><ul>'+need.map(it=>'<li>'+e(it.item)+' <span style="font-weight:600;color:'+statusFg(it.status)+'">('+statusLabel(it.status)+')</span></li>').join('')+'</ul></div>';
+   if(unrated.length)out+='<details class="compactUnrated"><summary>Belum dinilai ('+unrated.length+')</summary><ul>'+unrated.map(it=>'<li>'+e(it.item)+'</li>').join('')+'</ul></details>';
+   if(!done.length&&!need.length&&!unrated.length)out+='<p>Belum ada item penilaian.</p>';
+   if(c.note)out+='<div class="compactNote"><b>Catatan:</b> '+e(c.note)+'</div>';
+   out+='</div></details>';
+  });
+  out+='</div>';
+ }
  return out;
 }
-
 function observationMeta(o){
  return '<div class="review"><b>'+e(o.name)+'</b><br>'+e(o.unit||'')+'<br>'+e(o.date)+'<br>Kategori nasabah: '+e((o.customerType||'reguler')==='k1'?'Nasabah K1':'Nasabah Reguler')+'<br>Target Customer: '+e(o.targetCount||o.customerTarget||5)+' nasabah</div>';
 }
