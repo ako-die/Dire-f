@@ -41,6 +41,17 @@
 }
 .print-cover { display:none; }
 
+
+/* Review status grid: judul item menonjol, kotak status ringkas */
+.reviewItemRow{padding:12px 0 13px;border-bottom:1px solid #e8e0f0}
+.reviewItemRow:last-child{border-bottom:0}
+.reviewItemName{font-size:1.08rem;font-weight:900;line-height:1.35;margin:0 0 9px;color:#281544}
+.reviewStatusGrid{display:grid;gap:5px;width:100%}
+.reviewStatusCell{min-width:0;text-align:center;background:#f8f5fc;border:1px solid #e6dcef;border-radius:9px;padding:4px 2px 5px}
+.reviewStatusCustomer{font-size:12px;font-weight:800;line-height:1.2;color:#4b3768;margin-bottom:4px}
+.reviewStatusBadge{min-height:25px;display:flex;align-items:center;justify-content:center;border-radius:6px;padding:3px 1px;font-size:16px;font-weight:1000;line-height:1.1;box-shadow:0 1px 0 rgba(30,20,50,.12)}
+@media(max-width:380px){.reviewStatusGrid{gap:3px}.reviewStatusCell{padding:3px 1px}.reviewStatusCustomer{font-size:11px}.reviewStatusBadge{font-size:15px;min-height:23px}.reviewItemName{font-size:1.05rem}}
+
 /* Ringkasan Hasil Observasi: padat, tetap rinci saat kategori dibuka */
 .compactIntro{padding:14px 16px;border-radius:16px;background:linear-gradient(135deg,#173568,#26165c);color:#fff;margin:12px 0 8px}
 .compactIntroSub{font-size:.9em;margin-top:4px;opacity:.9}
@@ -201,49 +212,56 @@ function deleteCurrentObservation(){
 function review(o){
  const count=Math.min(10,Math.max(1,Number(o.targetCount||o.customerTarget||5)||5));
  const hasMulti=o.results&&o.results.some(c=>(c.items||[]).some(it=>Array.isArray(it.statuses)));
- if(!hasMulti){
-  let old='';
-  (o.results||[]).forEach(c=>{
-   const y=(c.items||[]).filter(x=>x.status==='Yes').map(x=>x.item);
-   const n=(c.items||[]).filter(x=>x.status!=='Yes').map(x=>x.item);
-   old+='<details class="compactCategory" open><summary>'+e(c.name)+' <span class="compactMeta">'+(y.length+n.length)+' item</span></summary>';
-   if(y.length)old+='<div class="good"><b>Yang telah dilakukan</b><ul>'+y.map(x=>'<li>'+e(x)+'</li>').join('')+'</ul></div>';
-   if(n.length)old+='<div class="improve"><b>Yang belum dilakukan / perlu ditingkatkan</b><ul>'+n.map(x=>'<li>'+e(x)+'</li>').join('')+'</ul></div>';
-   if(c.note)old+='<div class="review"><b>Catatan</b><br>'+e(c.note)+'</div>';
-   old+='</details>';
-  });
-  return old;
- }
  const valsFor=(it,j)=>Array.isArray(it.statuses)?(it.statuses[j]||''):(j===0?(it.status==='Yes'?'C':it.status==='No'?'N':''):'');
- const statusLabel=st=>st==='C'?'Complete':st==='I'?'In Complete':st==='N'?'No':'Belum dinilai';
- const statusBg=st=>st==='C'?'#D8F7E6':st==='I'?'#FFF0B8':st==='N'?'#FFE0E0':'#F0EDF5';
- const statusFg=st=>st==='C'?'#08743D':st==='I'?'#765300':st==='N'?'#A71923':'#625B70';
- let out='<div class="compactIntro"><b>Uraian Lengkap Hasil Observasi</b><div class="compactIntroSub">Rincian item dikelompokkan per nasabah. Hijau menunjukkan item yang telah dilakukan; kuning dan merah menunjukkan item yang belum lengkap atau tidak dilakukan.</div></div>';
- for(let j=0;j<count;j++){
-  const customerItems=[];
+ const fullLabel=st=>st==='C'?'Konsisten':st==='I'?'Tidak konsisten':st==='N'?'Tidak melakukan':'Belum dinilai';
+ let out='<div class="compactIntro"><b>Review Uraian Observasi</b><div class="compactIntroSub">Rincian tindakan yang telah dilakukan dan yang belum dilakukan atau perlu ditingkatkan, per nasabah.</div></div>';
+ if(!hasMulti){
   (o.results||[]).forEach(c=>{
-   const items=(c.items||[]).map(it=>({item:it.item,status:valsFor(it,j)}));
-   customerItems.push({name:c.name,note:c.note,items});
+   const done=(c.items||[]).filter(x=>x.status==='Yes').map(x=>x.item);
+   const need=(c.items||[]).filter(x=>x.status!=='Yes').map(x=>x.item);
+   out+='<details class="compactCategory" open><summary><span>'+e(c.name)+'</span><span class="compactMeta">'+(c.items||[]).length+' item</span></summary>';
+   if(done.length)out+='<div class="good"><b>Yang telah dilakukan</b><ul>'+done.map(x=>'<li>'+e(x)+'</li>').join('')+'</ul></div>';
+   if(need.length)out+='<div class="improve"><b>Yang belum dilakukan / perlu ditingkatkan</b><ul>'+need.map(x=>'<li>'+e(x)+'</li>').join('')+'</ul></div>';
+   if(c.note)out+='<div class="review"><b>Catatan</b><br>'+e(c.note)+'</div>';
+   out+='</details>';
   });
-  const anyRated=customerItems.some(c=>c.items.some(it=>it.status));
-  if(!anyRated)continue;
-  out+='<div class="compactCustomerBlock"><div class="compactSectionTitle">Nasabah '+(j+1)+'</div>';
-  customerItems.forEach(c=>{
-   const done=c.items.filter(it=>it.status==='C');
-   const need=c.items.filter(it=>it.status==='I'||it.status==='N');
-   const unrated=c.items.filter(it=>!it.status);
-   out+='<details class="compactCategory" open><summary><span>'+e(c.name)+'</span><span class="compactMeta">'+c.items.length+' item</span></summary><div class="compactCategoryBody">';
-   if(done.length)out+='<div class="good"><b>Yang telah dilakukan</b><ul>'+done.map(it=>'<li>'+e(it.item)+'</li>').join('')+'</ul></div>';
-   if(need.length)out+='<div class="improve"><b>Yang belum dilakukan / perlu ditingkatkan</b><ul>'+need.map(it=>'<li>'+e(it.item)+' <span style="font-weight:600;color:'+statusFg(it.status)+'">('+statusLabel(it.status)+')</span></li>').join('')+'</ul></div>';
-   if(unrated.length)out+='<details class="compactUnrated"><summary>Belum dinilai ('+unrated.length+')</summary><ul>'+unrated.map(it=>'<li>'+e(it.item)+'</li>').join('')+'</ul></details>';
-   if(!done.length&&!need.length&&!unrated.length)out+='<p>Belum ada item penilaian.</p>';
-   if(c.note)out+='<div class="compactNote"><b>Catatan:</b> '+e(c.note)+'</div>';
-   out+='</div></details>';
-  });
-  out+='</div>';
+  return out;
+ }
+ for(let j=0;j<count;j++){
+  const done=[],need=[],unrated=[];
+  (o.results||[]).forEach(c=>(c.items||[]).forEach(it=>{
+   const st=valsFor(it,j), row={item:it.item,category:c.name,status:st};
+   if(st==='C')done.push(row);else if(st==='I'||st==='N')need.push(row);else unrated.push(row);
+  }));
+  out+='<details class="compactCategory"'+(j===0?' open':'')+'><summary><span>Nasabah '+(j+1)+'</span><span class="compactMeta">'+done.length+' dilakukan · '+need.length+' perlu ditingkatkan</span></summary>';
+  if(done.length)out+='<div class="good"><b>Yang telah dilakukan</b><ul>'+done.map(it=>'<li>'+e(it.item)+' <span style="font-size:.9em">('+e(it.category)+')</span></li>').join('')+'</ul></div>';
+  if(need.length)out+='<div class="improve"><b>Yang belum dilakukan / perlu ditingkatkan</b><ul>'+need.map(it=>'<li>'+e(it.item)+' <span style="font-weight:700">('+fullLabel(it.status)+'; '+e(it.category)+')</span></li>').join('')+'</ul></div>';
+  if(unrated.length)out+='<div class="review"><b>Belum dinilai</b><ul>'+unrated.map(it=>'<li>'+e(it.item)+' ('+e(it.category)+')</li>').join('')+'</ul></div>';
+  (o.results||[]).filter(c=>c.note).forEach(c=>{out+='<div class="review"><b>Catatan '+e(c.name)+'</b><br>'+e(c.note)+'</div>';});
+  out+='</details>';
  }
  return out;
 }
+function dailyMatrixReport(o){
+ const count=Math.min(10,Math.max(1,Number(o.targetCount||o.customerTarget||5)||5));
+ const valsFor=(it,j)=>Array.isArray(it.statuses)?(it.statuses[j]||''):(j===0?(it.status==='Yes'?'C':it.status==='No'?'N':''):'');
+ const label=st=>st==='C'?'K':st==='I'?'TK':st==='N'?'N':'—';
+ const bg=st=>st==='C'?'#D8F7E6':st==='I'?'#FFF0B8':st==='N'?'#FFE0E0':'#F0EDF5';
+ const fg=st=>st==='C'?'#08743D':st==='I'?'#765300':st==='N'?'#A71923':'#625B70';
+ let out='<div class="compactIntro"><b>Daily Report — Matriks Status N1–N'+count+'</b><div class="compactIntroSub">K = Konsisten · TK = Tidak konsisten · N = Tidak melakukan. Nama item ditampilkan di atas status.</div></div>';
+ (o.results||[]).forEach(c=>{
+  out+='<details class="compactCategory" open><summary><span>'+e(c.name)+'</span><span class="compactMeta">'+(c.items||[]).length+' item</span></summary><div class="compactCategoryBody">';
+  (c.items||[]).forEach((it,ii)=>{
+   out+='<div class="reviewItemRow"><div class="reviewItemName" style="font-size:1.12rem;font-weight:800;margin-bottom:7px">'+(ii+1)+'. '+e(it.item)+'</div><div class="reviewStatusGrid" style="grid-template-columns:repeat('+count+',minmax(0,1fr));gap:4px">';
+   for(let j=0;j<count;j++){const st=valsFor(it,j);out+='<div class="reviewStatusCell" style="min-width:0"><div class="reviewStatusCustomer" style="font-size:.82rem;font-weight:800">N'+(j+1)+'</div><div class="reviewStatusBadge" style="min-height:24px;padding:3px 2px;font-size:.92rem;font-weight:800;background:'+bg(st)+';color:'+fg(st)+'" title="'+(st==='C'?'Konsisten':st==='I'?'Tidak konsisten':st==='N'?'Tidak melakukan':'Belum dinilai')+'">'+label(st)+'</div></div>';}
+   out+='</div></div>';
+  });
+  if(c.note)out+='<div class="compactNote"><b>Catatan:</b> '+e(c.note)+'</div>';
+  out+='</div></details>';
+ });
+ return out;
+}
+
 function observationMeta(o){
  return '<div class="review"><b>'+e(o.name)+'</b><br>'+e(o.unit||'')+'<br>'+e(o.date)+'<br>Kategori nasabah: '+e((o.customerType||'reguler')==='k1'?'Nasabah K1':'Nasabah Reguler')+'<br>Target Customer: '+e(o.targetCount||o.customerTarget||5)+' nasabah</div>';
 }
@@ -293,8 +311,14 @@ function results(){
 }
 function daily(){
  const data=get();
- dailyList.innerHTML=data.length?data.slice().reverse().map(o=>'<div class="card"><b>'+e(o.name)+'</b><br><small>'+e(o.unit||'')+' · '+e(o.date)+'</small><div class="actions"><button class="btn purple" onclick="view('+o.id+')">Review</button><button class="btn light" onclick="view('+o.id+');setTimeout(editObservation,100)">✏️ Edit</button><button class="btn red" onclick="del('+o.id+')">🗑️ Hapus</button></div></div>').join(''):'<p>Belum ada data.</p>';
+ dailyList.innerHTML=data.length?data.slice().reverse().map(o=>'<div class="card"><b>'+e(o.name)+'</b><br><small>'+e(o.unit||'')+' · '+e(o.date)+' · Target '+e(o.targetCount||o.customerTarget||5)+' nasabah</small><div class="actions"><button class="btn purple" onclick="toggleDailyMatrix('+Number(o.id)+')">📊 Lihat Matriks Daily Report</button><button class="btn light" onclick="view('+Number(o.id)+')">Review Uraian</button><button class="btn light" onclick="view('+Number(o.id)+');setTimeout(editObservation,100)">✏️ Edit</button><button class="btn red" onclick="del('+Number(o.id)+')">🗑️ Hapus</button></div><div id="dailyMatrix_'+Number(o.id)+'" style="display:none;margin-top:12px">'+dailyMatrixReport(o)+'</div></div>').join(''):'<p>Belum ada data.</p>';
 }
+function toggleDailyMatrix(id){
+ const box=document.getElementById('dailyMatrix_'+Number(id));if(!box)return;
+ const opening=box.style.display==='none'||!box.style.display;
+ box.style.display=opening?'block':'none';
+}
+
 function del(id){if(confirm("Hapus observasi ini?")){put(get().filter(x=>x.id!==id));daily();results();}}
 function master(){
  const total=masterDraft.reduce((n,c)=>n+c[1].length,0);
