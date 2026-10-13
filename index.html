@@ -97,7 +97,7 @@
 <button class="btn purple" onclick="window.print()">🖨️ Cetak Laporan</button>
 </div></div></section><section id="daily" class="page"><div class="card"><h2>Daily Report</h2><div id="dailyList"></div></div></section><section id="monthly" class="page"><div class="card"><h2>Monthly Report</h2><input id="year" type="number"><button class="btn purple" style="width:100%;margin-top:9px" onclick="monthly()">Tampilkan</button><div id="months"></div></div></section><section id="master" class="page"><div class="card"><h2>Master Penilaian</h2><p id="masterTopInfo">Master adalah sumber item Observasi. Atur item untuk Nasabah Reguler dan Nasabah K1 di sini; semua perubahan berlaku setelah satu tombol SIMPAN di bagian bawah.</p></div><div id="masterList"></div></section></main><footer><button onclick="go('home')">⌂　HOME</button></footer>
 <script>
-const DEFAULT_MASTER=[['Greeting',['Senyum sapa salam','Memperkenalkan diri dan sebut nama','Jika sudah kenal sebut nama nasabah','Menanyakan nama nasabah','Menanyakan kebutuhan nasabah']],['Socialization — Nasabah Reguler',['Menginformasikan survei layanan VOC BSQ','Edukasi aplikasi dan mesin digital']],['Socialization — Nasabah K1',['Menginformasikan survei layanan VOC CE','Edukasi aplikasi dan mesin digital']],['Education — Nasabah Reguler',['Melakukan edukasi VOC BSQ kepada nasabah reguler','Melakukan edukasi penggunaan aplikasi dan mesin digital']],['Education — Nasabah K1',['Melakukan edukasi VOC CE kepada nasabah K1','Melakukan edukasi penggunaan aplikasi dan mesin digital']],['Telling',['Melakukan penawaran produk sesuai kebutuhan nasabah','Memberikan solusi produk yang sesuai dengan kebutuhan nasabah']],['Satisfaction',['Memproses transaksi dengan cepat','Melayani dengan fokus','Memproses transaksi dengan teliti','Memberikan penjelasan yang lengkap','Memberikan solusi dengan tuntas']],['Appreciation',['Menanyakan kebutuhan lain sebelum mengakhiri layanan','Menyampaikan ucapan terima kasih','Menyampaikan kata-kata magic word']],['Checking',['Melakukan pengecekan nasabah K1 untuk melakukan VOC CE']],['Report & Follow Up',['Menginput penawaran solusi yang diberikan','Menindaklanjuti setiap penawaran solusi yang diberikan']]];
+const DEFAULT_MASTER=[['Greeting',['Senyum sapa salam','Memperkenalkan diri dan sebut nama','Jika sudah kenal sebut nama nasabah','Menanyakan nama nasabah','Menanyakan kebutuhan nasabah']],['Socialization — Nasabah Reguler',['Menginformasikan survei layanan VOC BSQ','Edukasi aplikasi dan mesin digital']],['Socialization — Nasabah K1',['Menginformasikan survei layanan VOC CE','Edukasi aplikasi dan mesin digital']],['Education — Nasabah Reguler',['Melakukan edukasi VOC BSQ kepada nasabah reguler','Melakukan edukasi penggunaan aplikasi dan mesin digital']],['Education — Nasabah K1',['Melakukan edukasi VOC CE kepada nasabah K1','Melakukan edukasi penggunaan aplikasi dan mesin digital']],['Telling',['Melakukan penawaran produk sesuai kebutuhan nasabah','Memberikan solusi produk yang sesuai dengan kebutuhan nasabah']],['Satisfaction',['Memproses transaksi dengan cepat','Melayani dengan fokus','Memproses transaksi dengan teliti','Memberikan penjelasan yang lengkap','Memberikan solusi dengan tuntas']],['Appreciation',['Menanyakan kebutuhan lain sebelum mengakhiri layanan','Menyampaikan ucapan terima kasih','Menyampaikan kata-kata magic word']],['Checking',['Melakukan pengecekan nasabah K1 untuk melakukan VOC CE']],['Report & Follow Up',['Menginput penawaran solusi yang diberikan','Menindaklanjuti setiap penawaran solusi yang diberikan']],['Interaction',['menggali kebutuhan nasabah','hanya sebatas kebutuhan transaksi']]];
 ;
 const MASTER_KEY="direF_master_penilaian_v2";
 function loadMaster(){
@@ -115,8 +115,10 @@ function loadMaster(){
     const digital=oldEdu.find(x=>/aplikasi|mesin digital/i.test(x))||'Edukasi aplikasi dan mesin digital';
     const upgraded=parsed.filter(c=>!['Socialization','Education'].includes(c[0]));
     upgraded.splice(1,0,['Socialization — Nasabah Reguler',[bsq,digital]],['Socialization — Nasabah K1',[ce,digital]],['Education — Nasabah Reguler',[eduB,digital]],['Education — Nasabah K1',[eduK,digital]]);
+    if(!upgraded.some(c=>String(c[0]).toLowerCase()==='interaction')) upgraded.push(['Interaction',['menggali kebutuhan nasabah','hanya sebatas kebutuhan transaksi']]);
     localStorage.setItem(MASTER_KEY,JSON.stringify(upgraded)); return upgraded;
    }
+   if(!parsed.some(c=>String(c[0]).toLowerCase()==='interaction')){parsed.push(['Interaction',['menggali kebutuhan nasabah','hanya sebatas kebutuhan transaksi']]);localStorage.setItem(MASTER_KEY,JSON.stringify(parsed));}
    return parsed;
   }
  }catch(err){}
@@ -152,13 +154,14 @@ function updateItemConsistency(ci,i){
  const cell=document.getElementById('consistency_'+ci+'_'+i);if(!cell)return;
  cell.classList.remove('consistent','inconsistent','not-running','unrated');
  if(vals.every(v=>!v)){cell.textContent='Belum dinilai';cell.classList.add('unrated');return;}
- if(vals.every(v=>v==='N')){cell.textContent='Tidak menjalankan';cell.classList.add('not-running');return;}
- if(vals.every(v=>v==='C')){cell.textContent='Konsisten';cell.classList.add('consistent');return;}
+ const isInteraction=String(activeMaster()[ci]?.[0]||'').toLowerCase()==='interaction';
+ if(vals.every(v=>v==='N')){cell.textContent=isInteraction?'Tidak melakukan':'Tidak menjalankan';cell.classList.add('not-running');return;}
+ if(vals.every(v=>v==='C')){cell.textContent=isInteraction?'Melakukan':'Konsisten';cell.classList.add('consistent');return;}
  cell.textContent='Belum konsisten';cell.classList.add('inconsistent');
 }
 function build(){
  const list=activeMaster();
- form.innerHTML=list.map((c,ci)=>'<div class="cat"><div class="cathead">'+(ci+1)+'. '+e(c[0])+'</div><div class="catbody"><div class="matrixWrap"><table class="matrix"><thead><tr><th>Item Penilaian</th>'+Array.from({length:customerCount},(_,j)=>'<th class="customerLabel">Nasabah '+(j+1)+'</th>').join('')+'<th class="consistencyHead">Status</th></tr></thead><tbody>'+c[1].map((x,i)=>'<tr><td>'+(i+1)+'. '+e(x)+'</td>'+Array.from({length:customerCount},(_,j)=>'<td><select aria-label="'+e(x)+' - Nasabah '+(j+1)+'" name="q'+ci+'_'+i+'_'+j+'" class="status-empty" onchange="setStatusStyle(this);updateItemConsistency('+ci+','+i+')"><option value="">—</option><option value="C">Complete</option><option value="I">In Complete</option><option value="N">No</option></select></td>').join('')+'<td id="consistency_'+ci+'_'+i+'" class="consistencyCell unrated">Belum dinilai</td></tr>').join('')+'</tbody></table></div><div class="noteTitle">📝 Catatan '+e(c[0])+'</div><textarea id="n'+ci+'" placeholder="Tulis catatan untuk kategori ini..."></textarea></div></div>').join('');
+ form.innerHTML=list.map((c,ci)=>{const interaction=String(c[0]).trim().toLowerCase()==='interaction';return '<div class="cat"><div class="cathead">'+(ci+1)+'. '+e(c[0])+'</div><div class="catbody"><div class="matrixWrap"><table class="matrix"><thead><tr><th>Item Penilaian</th>'+Array.from({length:customerCount},(_,j)=>'<th class="customerLabel">Nasabah '+(j+1)+'</th>').join('')+'<th class="consistencyHead">Status</th></tr></thead><tbody>'+c[1].map((x,i)=>'<tr><td>'+(i+1)+'. '+e(x)+'</td>'+Array.from({length:customerCount},(_,j)=>'<td><select aria-label="'+e(x)+' - Nasabah '+(j+1)+'" name="q'+ci+'_'+i+'_'+j+'" class="status-empty" onchange="setStatusStyle(this);updateItemConsistency('+ci+','+i+')"><option value="">—</option><option value="C">'+(interaction?'Melakukan':'Complete')+'</option>'+(interaction?'':'<option value="I">In Complete</option>')+'<option value="N">'+(interaction?'Tidak melakukan':'No')+'</option></select></td>').join('')+'<td id="consistency_'+ci+'_'+i+'" class="consistencyCell unrated">Belum dinilai</td></tr>').join('')+'</tbody></table></div><div class="noteTitle">📝 Catatan '+e(c[0])+'</div><textarea id="n'+ci+'" placeholder="Tulis catatan untuk kategori ini..."></textarea></div></div>';}).join('');
 }
 
 function save(){
@@ -213,7 +216,7 @@ function review(o){
  const count=Math.min(10,Math.max(1,Number(o.targetCount||o.customerTarget||5)||5));
  const hasMulti=o.results&&o.results.some(c=>(c.items||[]).some(it=>Array.isArray(it.statuses)));
  const valsFor=(it,j)=>Array.isArray(it.statuses)?(it.statuses[j]||''):(j===0?(it.status==='Yes'?'C':it.status==='No'?'N':''):'');
- const fullLabel=st=>st==='C'?'Konsisten':st==='I'?'Tidak konsisten':st==='N'?'Tidak melakukan':'Belum dinilai';
+ const fullLabel=(st,category)=>String(category).toLowerCase()==='interaction'?(st==='C'?'Melakukan':st==='N'?'Tidak melakukan':'Belum dinilai'):(st==='C'?'Konsisten':st==='I'?'Tidak konsisten':st==='N'?'Tidak melakukan':'Belum dinilai');
  let out='<div class="compactIntro"><b>Review Uraian Observasi</b><div class="compactIntroSub">Rincian tindakan yang telah dilakukan dan yang belum dilakukan atau perlu ditingkatkan, per nasabah.</div></div>';
  if(!hasMulti){
   (o.results||[]).forEach(c=>{
@@ -235,7 +238,7 @@ function review(o){
   }));
   out+='<details class="compactCategory"'+(j===0?' open':'')+'><summary><span>Nasabah '+(j+1)+'</span><span class="compactMeta">'+done.length+' dilakukan · '+need.length+' perlu ditingkatkan</span></summary>';
   if(done.length)out+='<div class="good"><b>Yang telah dilakukan</b><ul>'+done.map(it=>'<li>'+e(it.item)+' <span style="font-size:.9em">('+e(it.category)+')</span></li>').join('')+'</ul></div>';
-  if(need.length)out+='<div class="improve"><b>Yang belum dilakukan / perlu ditingkatkan</b><ul>'+need.map(it=>'<li>'+e(it.item)+' <span style="font-weight:700">('+fullLabel(it.status)+'; '+e(it.category)+')</span></li>').join('')+'</ul></div>';
+  if(need.length)out+='<div class="improve"><b>Yang belum dilakukan / perlu ditingkatkan</b><ul>'+need.map(it=>'<li>'+e(it.item)+' <span style="font-weight:700">('+fullLabel(it.status,it.category)+'; '+e(it.category)+')</span></li>').join('')+'</ul></div>';
   if(unrated.length)out+='<div class="review"><b>Belum dinilai</b><ul>'+unrated.map(it=>'<li>'+e(it.item)+' ('+e(it.category)+')</li>').join('')+'</ul></div>';
   (o.results||[]).filter(c=>c.note).forEach(c=>{out+='<div class="review"><b>Catatan '+e(c.name)+'</b><br>'+e(c.note)+'</div>';});
   out+='</details>';
@@ -245,15 +248,15 @@ function review(o){
 function dailyMatrixReport(o){
  const count=Math.min(10,Math.max(1,Number(o.targetCount||o.customerTarget||5)||5));
  const valsFor=(it,j)=>Array.isArray(it.statuses)?(it.statuses[j]||''):(j===0?(it.status==='Yes'?'C':it.status==='No'?'N':''):'');
- const label=st=>st==='C'?'K':st==='I'?'TK':st==='N'?'N':'—';
+ const label=(st,isInteraction)=>isInteraction?(st==='C'?'M':st==='N'?'TM':'—'):(st==='C'?'K':st==='I'?'TK':st==='N'?'N':'—');
  const bg=st=>st==='C'?'#D8F7E6':st==='I'?'#FFF0B8':st==='N'?'#FFE0E0':'#F0EDF5';
  const fg=st=>st==='C'?'#08743D':st==='I'?'#765300':st==='N'?'#A71923':'#625B70';
- let out='<div class="compactIntro"><b>Daily Report — Matriks Status N1–N'+count+'</b><div class="compactIntroSub">K = Konsisten · TK = Tidak konsisten · N = Tidak melakukan. Nama item ditampilkan di atas status.</div></div>';
+ let out='<div class="compactIntro"><b>Daily Report — Matriks Status N1–N'+count+'</b><div class="compactIntroSub">K = Konsisten · TK = Tidak konsisten · N = Tidak melakukan. Interaction: M = Melakukan · TM = Tidak melakukan.</div></div>';
  (o.results||[]).forEach(c=>{
   out+='<details class="compactCategory" open><summary><span>'+e(c.name)+'</span><span class="compactMeta">'+(c.items||[]).length+' item</span></summary><div class="compactCategoryBody">';
   (c.items||[]).forEach((it,ii)=>{
    out+='<div class="reviewItemRow"><div class="reviewItemName" style="font-size:1.12rem;font-weight:800;margin-bottom:7px">'+(ii+1)+'. '+e(it.item)+'</div><div class="reviewStatusGrid" style="grid-template-columns:repeat('+count+',minmax(0,1fr));gap:4px">';
-   for(let j=0;j<count;j++){const st=valsFor(it,j);out+='<div class="reviewStatusCell" style="min-width:0"><div class="reviewStatusCustomer" style="font-size:.82rem;font-weight:800">N'+(j+1)+'</div><div class="reviewStatusBadge" style="min-height:24px;padding:3px 2px;font-size:.92rem;font-weight:800;background:'+bg(st)+';color:'+fg(st)+'" title="'+(st==='C'?'Konsisten':st==='I'?'Tidak konsisten':st==='N'?'Tidak melakukan':'Belum dinilai')+'">'+label(st)+'</div></div>';}
+   for(let j=0;j<count;j++){const st=valsFor(it,j),isInteraction=String(c.name).toLowerCase()==='interaction';out+='<div class="reviewStatusCell" style="min-width:0"><div class="reviewStatusCustomer" style="font-size:.82rem;font-weight:800">N'+(j+1)+'</div><div class="reviewStatusBadge" style="min-height:24px;padding:3px 2px;font-size:.92rem;font-weight:800;background:'+bg(st)+';color:'+fg(st)+'" title="'+(st==='C'?'Konsisten':st==='I'?'Tidak konsisten':st==='N'?'Tidak melakukan':'Belum dinilai')+'">'+label(st,isInteraction)+'</div></div>';}
    out+='</div></div>';
   });
   if(c.note)out+='<div class="compactNote"><b>Catatan:</b> '+e(c.note)+'</div>';
@@ -289,7 +292,8 @@ function showSummary(id){
  html+='<div class="compactCategoryList">';
  (o.results||[]).forEach(c=>{
   const st=categoryStatus(o,c);
-  html+='<div class="result" style="display:flex;align-items:center;justify-content:space-between;gap:10px"><span>'+e(c.name)+'</span><b style="display:inline-block;white-space:normal;text-align:center;padding:7px 10px;border-radius:10px;background:'+backgrounds[st]+';color:'+colors[st]+'">'+labels[st]+'</b></div>';
+  const categoryLabels=String(c.name).toLowerCase()==='interaction'?{consistent:'Melakukan',inconsistent:'Sebagian melakukan','not-running':'Tidak melakukan',unrated:'Belum dinilai'}:labels;
+  html+='<div class="result" style="display:flex;align-items:center;justify-content:space-between;gap:10px"><span>'+e(c.name)+'</span><b style="display:inline-block;white-space:normal;text-align:center;padding:7px 10px;border-radius:10px;background:'+backgrounds[st]+';color:'+colors[st]+'">'+categoryLabels[st]+'</b></div>';
  });
  html+='</div><button class="btn purple" style="width:100%;margin-top:12px" onclick="view('+Number(o.id)+')">📋 Lihat Uraian Lengkap di Review</button>';
  result.innerHTML=html;
@@ -324,7 +328,13 @@ function master(){
  const total=masterDraft.reduce((n,c)=>n+c[1].length,0);
  const top=document.getElementById('masterTopInfo');
  if(top) top.textContent=`${masterDraft.length} kategori, ${total} item. Tambahkan atau ubah item, lalu tekan SIMPAN di bagian bawah.`;
- masterList.innerHTML=masterDraft.map((c,i)=>`<div class="cat"><div class="cathead">${i+1}. ${e(c[0])}</div><div class="catbody">${c[1].map((x,j)=>`<div class="masterItem"><div class="masterText">${j+1}. ${e(x)}</div><div class="masterActions"><button class="masterEdit" onclick="editMasterItem(${i},${j})">✏️ Edit</button><button class="masterDelete" onclick="deleteMasterItem(${i},${j})">🗑️ Hapus</button></div></div>`).join('')}<button class="masterAdd" onclick="addMasterItem(${i})">➕ Tambah Item</button></div></div>`).join('')+`<div class="card masterSaveWrap"><p class="masterInfo">${masterDraft.length} kategori, ${total} item. Semua perubahan akan digunakan di Observasi setelah tombol SIMPAN ditekan.</p><button class="masterSave" onclick="saveMaster()">💾 SIMPAN MASTER PENILAIAN</button></div>`;
+ masterList.innerHTML='<button class="masterAdd" onclick="addMasterCategory()">➕ Tambah Kategori</button>'+masterDraft.map((c,i)=>`<div class="cat"><div class="cathead">${i+1}. ${e(c[0])}</div><div class="catbody">${c[1].map((x,j)=>`<div class="masterItem"><div class="masterText">${j+1}. ${e(x)}</div><div class="masterActions"><button class="masterEdit" onclick="editMasterItem(${i},${j})">✏️ Edit</button><button class="masterDelete" onclick="deleteMasterItem(${i},${j})">🗑️ Hapus</button></div></div>`).join('')}<button class="masterAdd" onclick="addMasterItem(${i})">➕ Tambah Item</button></div></div>`).join('')+`<div class="card masterSaveWrap"><p class="masterInfo">${masterDraft.length} kategori, ${total} item. Semua perubahan akan digunakan di Observasi setelah tombol SIMPAN ditekan.</p><button class="masterSave" onclick="saveMaster()">💾 SIMPAN MASTER PENILAIAN</button></div>`;
+}
+function addMasterCategory(){
+ const value=prompt('Nama kategori baru:'); if(value===null)return;
+ const name=value.trim(); if(!name){alert('Nama kategori tidak boleh kosong.');return;}
+ if(masterDraft.some(c=>String(c[0]).trim().toLowerCase()===name.toLowerCase())){alert('Nama kategori sudah ada.');return;}
+ masterDraft.push([name,[]]); master();
 }
 function addMasterItem(ci){
  const category=masterDraft?.[ci]; if(!category)return;
