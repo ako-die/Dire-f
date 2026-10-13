@@ -215,9 +215,10 @@ function deleteCurrentObservation(){
 function review(o){
  const count=Math.min(10,Math.max(1,Number(o.targetCount||o.customerTarget||5)||5));
  const hasMulti=o.results&&o.results.some(c=>(c.items||[]).some(it=>Array.isArray(it.statuses)));
- const valsFor=(it,j)=>Array.isArray(it.statuses)?(it.statuses[j]||''):(j===0?(it.status==='Yes'?'C':it.status==='No'?'N':''):'');
+ const normalizeStatus=(v)=>{const s=String(v??'').trim().toLowerCase();if(['c','yes','y','melakukan','complete'].includes(s))return 'C';if(['n','no','tidak melakukan','not doing'].includes(s))return 'N';if(['i','in complete','incomplete'].includes(s))return 'I';return '';};
+ const valsFor=(it,j)=>Array.isArray(it.statuses)?normalizeStatus(it.statuses[j]):(j===0?normalizeStatus(it.status):'');
  const fullLabel=(st,category)=>st==='C'?'Yes — Melakukan':st==='N'?'No — Tidak melakukan':'Kosong — Belum dinilai';
- let out='<div class="compactIntro"><b>Review Uraian Observasi</b><div class="compactIntroSub">Rincian tindakan yang telah dilakukan dan yang belum dilakukan atau perlu ditingkatkan, per nasabah.</div></div>';
+ let out='<div class="compactIntro"><b>Review Uraian Observasi</b><div class="compactIntroSub">Rincian tindakan dibaca dari status masing-masing nasabah, bukan dari status konsistensi gabungan.</div></div>';
  if(!hasMulti){
   (o.results||[]).forEach(c=>{
    const done=(c.items||[]).filter(x=>x.status==='Yes').map(x=>x.item);
@@ -247,7 +248,8 @@ function review(o){
 }
 function dailyMatrixReport(o){
  const count=Math.min(10,Math.max(1,Number(o.targetCount||o.customerTarget||5)||5));
- const valsFor=(it,j)=>Array.isArray(it.statuses)?(it.statuses[j]||''):(j===0?(it.status==='Yes'?'C':it.status==='No'?'N':''):'');
+ const normalizeStatus=(v)=>{const s=String(v??'').trim().toLowerCase();if(['c','yes','y','melakukan','complete'].includes(s))return 'C';if(['n','no','tidak melakukan','not doing'].includes(s))return 'N';if(['i','in complete','incomplete'].includes(s))return 'I';return '';};
+ const valsFor=(it,j)=>Array.isArray(it.statuses)?normalizeStatus(it.statuses[j]):(j===0?normalizeStatus(it.status):'');
  const label=(st,isInteraction)=>st==='C'?'Y':st==='N'?'N':'—';
  const bg=st=>st==='C'?'#D8F7E6':st==='I'?'#FFF0B8':st==='N'?'#FFE0E0':'#F0EDF5';
  const fg=st=>st==='C'?'#08743D':st==='I'?'#765300':st==='N'?'#A71923':'#625B70';
